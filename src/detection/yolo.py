@@ -1,17 +1,23 @@
 # src/detection/yolo.py
+
 from ultralytics import YOLO
+from config import MODEL_PATH, YOLO_THRESHOLD
 
-class YOLOv8Detector:
-    def __init__(self, model_path):
-        self.model = YOLO(model_path)
+def load_yolo_model():
+    """
+    Carga y retorna el modelo YOLO.
+    """
+    return YOLO(MODEL_PATH)
 
-    def detect(self, frame):
-        results = self.model(frame)
-        detections = []
-        
-        for det in results[0].boxes:
-            x1, y1, x2, y2, conf, cls = det.xyxy.tolist()[0]
-            if cls == 0:  # Asegúrate de que el índice de clase para patentes es 0
-                detections.append((x1, y1, x2, y2, conf))
-        
-        return detections
+def get_detections(frame, model):
+    """
+    Obtiene las detecciones de objetos usando el modelo YOLO.
+    """
+    results = model(frame)[0]
+    detections = []
+    for result in results.boxes.data.tolist():
+        x1, y1, x2, y2, score, class_id = result
+        if score > YOLO_THRESHOLD:
+            bbox = [x1, y1, x2 - x1, y2 - y1]
+            detections.append((bbox, score, class_id))
+    return detections

@@ -1,10 +1,10 @@
 # src/ocr/ocr.py
-import easyocr
+from collections import Counter
 
-class EasyOCRRecognizer:
-    def __init__(self):
-        self.reader = easyocr.Reader(['en'])
-
-    def recognize(self, image):
-        text = self.reader.readtext(image)
-        return text[0][-2] if text else ""
+def get_most_common_plate(ocr_history, track_id):
+    """
+    Retorna la patente más frecuente en el historial de OCR para un track_id.
+    """
+    if ocr_history[track_id]:
+        return Counter(ocr_history[track_id]).most_common(1)[0][0]
+    return "Plate"
