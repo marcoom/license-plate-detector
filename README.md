@@ -35,8 +35,16 @@ Before running the project, you can configure the system behavior by editing the
 
 ### Execution
 
-Once the environment is set up and the parameters in `src/config.py` are adjusted, you can run the project as follows:
+Once the environment is set up and the parameters in `src/config.py` are adjusted, go to a terminal in the project's root folder and execute:
+
+```bash
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+```
+
+Then run the project as follows:
 
 ```bash
 python src/main.py
 ```
+
+If you are running on Webcam mode, you can close the window by pressing "q"
