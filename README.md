@@ -3,6 +3,8 @@
 
 This project is a system for detecting vehicle license plates from video or real-time camera input. It uses a YOLO model for detecting license plates and EasyOCR for recognizing the characters. Additionally, it employs the DeepSORT library for object tracking throughout the video.
 
+![alt text](media/animation.gif "Detection Example")
+
 ## Requirements
 
 To run this project, you need to install the following requirements. You can install them using `pip`:
