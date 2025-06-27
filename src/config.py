@@ -1,19 +1,22 @@
 # src/config.py
 
-# Video y procesamiento
-INPUT_VIDEO = './data/3_multiple.mp4'  # Archivo de video a procesar
-WEBCAM = True  # Si es True, usa la webcam en lugar del archivo de video
-DISPLAY_VIDEO = True  # Si es True, muestra el video procesado en tiempo real
-SAVE_TO_VIDEO = True  # Si es True, guarda el video procesado cuando WEBCAM=False
-SHOW_TRACKER_ID = True  # Si es True, muestra el ID del tracker junto con la patente
-SHOW_TRAJECTORY = True  # Si es True, muestra la trayectoria de los objetos rastreados
-CLOSE_WINDOW_KEY = 'q'  # Tecla para cerrar la ventana de video
+# Logging level configuration (e.g., 'INFO', 'DEBUG', 'WARNING')
+LOG_LEVEL = "INFO"
 
-# Modelo y parámetros de procesamiento
+# Video and processing
+INPUT_VIDEO = './data/3_multiple.mp4'  # File to process
+WEBCAM = True  # If True, use the webcam instead of the video file
+DISPLAY_VIDEO = True  # If True, display the processed video in real-time
+SAVE_TO_VIDEO = True  # If True, save the processed video when WEBCAM=False
+SHOW_TRACKER_ID = True  # If True, show the tracker ID along with the plate
+SHOW_TRAJECTORY = True  # If True, show the trajectory of the tracked objects
+CLOSE_WINDOW_KEY = 'q'  # Key to close the video window
+
+# Model and processing parameters
 MODEL_PATH = './models/car_plate.pt'
-YOLO_THRESHOLD = 0.5  # Umbral para detección de objetos
-OCR_CONFIDENCE_THRESHOLD = 0.02  # Umbral de confianza mínimo para resultados OCR
-MAX_AGE = 60  # Número máximo de frames que el objeto puede estar ausente antes de eliminar el track
-N_INIT = 10  # Número de detecciones necesarias para confirmar un objeto
-COSINE_DISTANCE_THRESHOLD = 0.4  # Umbral de distancia de similitud
-TRAJECTORY_LENGTH = 50  # Longitud máxima de la trayectoria
+YOLO_THRESHOLD = 0.5  # Object detection threshold
+OCR_CONFIDENCE_THRESHOLD = 0.02  # Minimum confidence for OCR results
+MAX_AGE = 60  # Maximum number of frames an object can be absent before deleting the track
+N_INIT = 10  # Number of detections needed to confirm an object
+COSINE_DISTANCE_THRESHOLD = 0.4  # Cosine distance threshold for object re-identification
+TRAJECTORY_LENGTH = 50  # Maximum length of the trajectory

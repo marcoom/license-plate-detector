@@ -50,3 +50,32 @@ python src/main.py
 ```
 
 If you are running on Webcam mode, you can close the window by pressing "q"
+
+## Documentation
+
+This project uses [Sphinx](https://www.sphinx-doc.org/) to generate both HTML and PDF documentation from the source code and docstrings.
+
+### Building the Documentation
+
+1. **Install documentation dependencies** (if not already done):
+   ```bash
+   pip install -r requirements.txt
+   ```
+   Ensure you are using the correct Python environment where all project dependencies are installed.
+
+2. **Navigate to the `docs/` directory:**
+   ```bash
+   cd docs
+   ```
+
+3. **Build HTML documentation:**
+   ```bash
+   make html
+   ```
+   The HTML documentation will be generated in `docs/build/html/index.html`.
+
+4. **Build PDF documentation:**
+   ```bash
+   make pdf
+   ```
+   The PDF documentation will be generated in `docs/build/pdf/License plate detector.pdf`.

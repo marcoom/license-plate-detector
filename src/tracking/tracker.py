@@ -1,80 +1,105 @@
 # src/tracking/tracker.py
+from typing import Any, Dict, List, Tuple
 from src.config import COSINE_DISTANCE_THRESHOLD, MAX_AGE, N_INIT, SHOW_TRAJECTORY, TRAJECTORY_LENGTH, OCR_CONFIDENCE_THRESHOLD
 from deep_sort_realtime.deepsort_tracker import DeepSort
-#from main import trajectories, reader
-from ui.interface import draw_trajectory, draw_plate_on_frame
-from ocr.ocr import get_most_common_plate
+from ui.interface import VideoInterface
+from ocr.ocr import OCRReader
+from ui.drawing import draw_plate_on_frame, draw_trajectory
+import numpy as np
+import logging
 
-def initialize_tracker():
-    """
-    Inicializa y retorna un tracker DeepSORT con los parámetros configurados.
-    """
-    return DeepSort(max_age=MAX_AGE, 
-                    n_init=N_INIT, 
-                    embedder="mobilenet", 
-                    max_cosine_distance=COSINE_DISTANCE_THRESHOLD, 
-                    nn_budget=None)
+logger = logging.getLogger(__name__)
 
-def process_detections(detections, frame, tracker, ocr_history, trajectories, reader):
+class Tracker:
     """
-    Procesa las detecciones del frame actual, actualiza el tracker y el historial de OCR.
-    También dibuja las trayectorias de los objetos rastreados.
+    Encapsulates DeepSort tracking, OCR history, and trajectory management.
     """
-    tracks = tracker.update_tracks(detections, frame=frame)
-    for track in tracks:
-        if not track.is_confirmed() or track.time_since_update > 1:
-            continue
-        handle_track(track, frame, ocr_history, reader)
+    def __init__(self) -> None:
+        """
+        Initialize the DeepSort tracker and supporting data structures.
+        """
+        self.tracker = DeepSort(
+            max_age=MAX_AGE,
+            n_init=N_INIT,
+            embedder="mobilenet",
+            max_cosine_distance=COSINE_DISTANCE_THRESHOLD,
+            nn_budget=None
+        )
+        logger.info("DeepSort tracker initialized with max_age=%d, n_init=%d", MAX_AGE, N_INIT)
+        self.ocr_history: Dict[int, List[str]] = {}
+        self.trajectories: Dict[int, List[Tuple[int, int]]] = {}
 
-        # Actualiza y dibuja la trayectoria
+    def update_tracks(self, detections: List[Tuple[Any, float, int]], frame: np.ndarray) -> None:
+        """
+        Update tracks using the DeepSort tracker.
+
+        Args:
+            detections (List[Tuple[Any, float, int]]): List of detections (bbox, score, class_id).
+            frame (np.ndarray): Current video frame.
+        """
+        logger.debug("Updating tracks with %d detections", len(detections))
+        self.tracker.update_tracks(detections, frame=frame)
+
+    def process_single_track(self, track: Any, frame: np.ndarray, ocr_reader: Any) -> None:
+        """
+        Process a single tracked object: apply OCR and update OCR history.
+
+        Args:
+            track (Any): Track object from DeepSort.
+            frame (np.ndarray): Current video frame.
+            ocr_reader (Any): OCR reader instance (e.g., EasyOCR reader).
+        """
+        track_id = track.track_id
+        logger.debug("Processing single track: %s", track_id)
+        ltrb = track.to_ltrb()
+        x1, y1, x2, y2 = map(int, ltrb)
+        H, W, _ = frame.shape
+        x1, y1 = max(0, x1), max(0, y1)
+        x2, y2 = min(W, x2), min(H, y2)
+        if x2 - x1 > 0 and y2 - y1 > 0:
+            img_license = frame[y1:y2, x1:x2]
+            ocr_results = ocr_reader.readtext(img_license)
+            if track_id not in self.ocr_history:
+                self.ocr_history[track_id] = []
+                logger.debug("Created new OCR history for track %s", track_id)
+            if ocr_results:
+                _, text, confidence = ocr_results[0]
+                logger.debug("OCR result for track %s: '%s' (confidence: %.2f)", track_id, text, confidence)
+                if isinstance(text, str) and confidence >= OCR_CONFIDENCE_THRESHOLD:
+                    self.ocr_history[track_id].append(text)
+            most_common_plate = OCRReader.get_most_common_plate(self.ocr_history, track_id)
+            draw_plate_on_frame(frame, most_common_plate, x1, y1, x2, y2, track_id)
+
+    def update_trajectory(self, track: Any, frame: np.ndarray) -> None:
+        """
+        Update and draw trajectory for a single tracked object.
+
+        Args:
+            track (Any): Track object from DeepSort.
+        """
         track_id = track.track_id
         ltrb = track.to_ltrb()
         center_x, center_y = int((ltrb[0] + ltrb[2]) / 2), int((ltrb[1] + ltrb[3]) / 2)
-        
-        # Añadir el centro del objeto a la trayectoria del track_id
-        if track_id not in trajectories:
-            trajectories[track_id] = []
-        
-        trajectories[track_id].append((center_x, center_y))
-        
-        # Limitar la longitud de la trayectoria a TRAJECTORY_LENGTH
-        if len(trajectories[track_id]) > TRAJECTORY_LENGTH:
-            trajectories[track_id] = trajectories[track_id][-TRAJECTORY_LENGTH:]
-
-        # Dibuja la trayectoria si está habilitado SHOW_TRAJECTORY
+        if track_id not in self.trajectories:
+            self.trajectories[track_id] = []
+        self.trajectories[track_id].append((center_x, center_y))
+        if len(self.trajectories[track_id]) > TRAJECTORY_LENGTH:
+            self.trajectories[track_id] = self.trajectories[track_id][-TRAJECTORY_LENGTH:]
         if SHOW_TRAJECTORY:
-            draw_trajectory(frame, trajectories[track_id])
+            draw_trajectory(frame, self.trajectories[track_id])
 
-def handle_track(track, frame, ocr_history, reader):
-    """
-    Maneja un objeto rastreado, aplica OCR y actualiza el historial de texto por track_id.
-    """
-    track_id = track.track_id
-    ltrb = track.to_ltrb()  # Obtiene las coordenadas del bounding box rastreado
-    x1, y1, x2, y2 = map(int, ltrb)
+    def process_detections(self, detections: List[Tuple[Any, float, int]], frame: np.ndarray, ocr_reader: Any) -> None:
+        """
+        Process detections for the current frame, update tracks, OCR history, and draw trajectories.
 
-    # Asegurarse de que las coordenadas estén dentro del frame
-    H, W, _ = frame.shape
-    x1, y1 = max(0, x1), max(0, y1)
-    x2, y2 = min(W, x2), min(H, y2)
-
-    if x2 - x1 > 0 and y2 - y1 > 0:  # Verifica que las coordenadas sean válidas
-        img_license = frame[y1:y2, x1:x2]
-
-        # Aplica OCR sobre la imagen recortada
-        ocr_results = reader.readtext(img_license)
-
-        if track_id not in ocr_history:
-            ocr_history[track_id] = []
-
-        if ocr_results:
-            # Asegurarse de que el OCR devuelve resultados válidos
-            _, text, confidence = ocr_results[0]
-            if isinstance(text, str) and confidence >= OCR_CONFIDENCE_THRESHOLD:
-                ocr_history[track_id].append(text)
-
-        # Calcula el valor más frecuente en el historial de OCR
-        most_common_plate = get_most_common_plate(ocr_history, track_id)
-
-        # Dibuja la patente detectada y el bounding box en el frame original
-        draw_plate_on_frame(frame, most_common_plate, x1, y1, x2, y2, track_id)
+        Args:
+            detections (List[Tuple[Any, float, int]]): List of detections (bbox, score, class_id).
+            frame (np.ndarray): Current video frame.
+            ocr_reader (Any): OCR reader instance (e.g., EasyOCR reader).
+        """
+        self.update_tracks(detections, frame)
+        for track in self.tracker.tracker.tracks:
+            if not track.is_confirmed() or track.time_since_update > 1:
+                continue
+            self.process_single_track(track, frame, ocr_reader)
+            self.update_trajectory(track, frame)
