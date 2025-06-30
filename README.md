@@ -79,3 +79,11 @@ This project uses [Sphinx](https://www.sphinx-doc.org/) to generate both HTML an
    make pdf
    ```
    The PDF documentation will be generated in `docs/build/pdf/License plate detector.pdf`.
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+
+By using, modifying, or distributing this software, you agree to the terms of the AGPL-3.0 license. If you deploy this software as a service (e.g., over a network), you must make the complete source code of the running version available to users. See the LICENSE file for details.
+
+Third-party components are used under their respective licenses. See the NOTICE file for attributions and more information.
