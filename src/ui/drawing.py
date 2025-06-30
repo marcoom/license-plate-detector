@@ -21,6 +21,44 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+import time
+
+class FPSCounter:
+    """
+    Tracks frame timestamps and computes mean FPS over a sliding 1-second window.
+    Call update() on each frame and get_fps() to retrieve the current mean FPS (int).
+    """
+    def __init__(self):
+        self.frame_times = []
+        self.mean_fps = 0
+        self.last_fps_update = time.time()
+
+    def update(self):
+        curr_time = time.time()
+        self.frame_times.append(curr_time)
+        one_sec_ago = curr_time - 1.0
+        self.frame_times = [t for t in self.frame_times if t >= one_sec_ago]
+        # Update mean FPS once per second
+        if curr_time - self.last_fps_update >= 1.0:
+            self.mean_fps = len(self.frame_times)
+            self.last_fps_update = curr_time
+
+    def get_fps(self) -> int:
+        return self.mean_fps
+
+def draw_fps_on_frame(frame: 'cv2.Mat', fps: float) -> None:
+    """
+    Draw the FPS counter in the top-left corner of the frame (white text over black rectangle).
+    """
+    text = f"FPS: {round(fps)}"
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.7
+    font_thickness = 2
+    text_size, _ = cv2.getTextSize(text, font, font_scale, font_thickness)
+    x, y = 10, 10 + text_size[1]
+    cv2.rectangle(frame, (x - 5, y - text_size[1] - 5), (x + text_size[0] + 5, y + 5), (0, 0, 0), -1)
+    cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+
 def draw_plate_on_frame(
     frame: 'cv2.Mat',
     plate_text: str,

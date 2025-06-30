@@ -25,9 +25,10 @@ Before running the project, you can configure the system behavior by editing the
 - `SAVE_TO_VIDEO`: Set to `True` to save the processed video when using a video file as input (`WEBCAM=False`).
 - `SHOW_TRACKER_ID`: Set to `True` to display the tracker ID along with the detected license plate in the video.
 - `SHOW_TRAJECTORY`: Set to `True` to show the trajectory of the tracked objects on the video.
+- `SHOW_FPS`: Set to `True` to display the FPS counter in the top-left corner
 - `CLOSE_WINDOW_KEY`: The key that will be used to close the video window (default is `'q'`).
 
-- `MODEL_PATH`: Path to the YOLO model file (e.g., `'./models/car_plate.pt'`).
+- `MODEL_PATH`: Path to the YOLO model file (e.g., `'./models/car_plate.pt'`). Model can be in .pt format or NCNN (more suitable for mobile platforms)
 - `YOLO_THRESHOLD`: Confidence threshold for object detection. Only detections with confidence above this value will be considered (default is `0.5`).
 - `OCR_CONFIDENCE_THRESHOLD`: Minimum confidence threshold for OCR results. Only OCR results with confidence above this value will be considered (default is `0.02`).
 - `MAX_AGE`: The maximum number of frames an object can be absent before its track is deleted (default is `60`).
@@ -50,6 +51,9 @@ python src/main.py
 ```
 
 If you are running on Webcam mode, you can close the window by pressing "q"
+
+## Detection Model
+The detection model used is based on YOLOv8 and is trained on a custom dataset of license plates. The model and its training code is available at https://github.com/marcoom/yolo-licence-plate-training
 
 ## Documentation
 

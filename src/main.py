@@ -14,15 +14,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from config import WEBCAM, INPUT_VIDEO, SAVE_TO_VIDEO, CLOSE_WINDOW_KEY, YOLO_THRESHOLD, DISPLAY_VIDEO
+from config import WEBCAM, INPUT_VIDEO, SAVE_TO_VIDEO, CLOSE_WINDOW_KEY, YOLO_THRESHOLD, DISPLAY_VIDEO, SHOW_FPS
 from src.logging.logger import LoggerConfigurator
 from detection.yolo import YOLODetector
 from tracking.tracker import Tracker
 from ocr.ocr import OCRReader
 from video.video_handler import VideoHandler
+from ui.drawing import draw_fps_on_frame, FPSCounter
 import cv2
 from typing import Optional
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -73,17 +75,25 @@ class LicensePlateDetectorApp:
             logger.error("Video handler not initialized.")
             return
         frame_count = 0
+        fps_counter = FPSCounter()
         while True:
             ret, frame = self.video_handler.read_frame()
             if not ret:
                 logger.info("No more frames to read or error reading frame. Exiting loop.")
                 break
+            fps_counter.update()
+
             detections = self.yolo_detector.detect(frame)
             if detections:
                 logger.debug("Detections found on frame %d: %s", frame_count, detections)
                 self.tracker.process_detections(detections, frame, self.ocr_reader.reader)
             else:
                 logger.debug("No detections on frame %d", frame_count)
+
+            # Draw FPS if enabled (after all processing)
+            if SHOW_FPS:
+                draw_fps_on_frame(frame, fps_counter.get_fps())
+
             if self.video_handler.writer is not None:
                 self.video_handler.write_frame(frame)
             if DISPLAY_VIDEO:
