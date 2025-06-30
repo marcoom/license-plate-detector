@@ -25,10 +25,11 @@ DISPLAY_VIDEO = True  # If True, display the processed video in real-time
 SAVE_TO_VIDEO = True  # If True, save the processed video when WEBCAM=False
 SHOW_TRACKER_ID = True  # If True, show the tracker ID along with the plate
 SHOW_TRAJECTORY = True  # If True, show the trajectory of the tracked objects
+SHOW_FPS = True  # If True, display the FPS counter in the top-left corner
 CLOSE_WINDOW_KEY = 'q'  # Key to close the video window
 
 # Model and processing parameters
-MODEL_PATH = './models/car_plate.pt'
+MODEL_PATH = './models/best_ncnn_model' # Model can be ncnn (./models/best_ncnn_model) or torch file (./models/car_plate.pt)
 YOLO_THRESHOLD = 0.5  # Object detection threshold
 OCR_CONFIDENCE_THRESHOLD = 0.02  # Minimum confidence for OCR results
 MAX_AGE = 60  # Maximum number of frames an object can be absent before deleting the track
