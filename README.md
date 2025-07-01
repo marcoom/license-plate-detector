@@ -36,6 +36,7 @@ Before running the project, you can configure the system behavior by editing the
 - `COSINE_DISTANCE_THRESHOLD`: Threshold for cosine distance used in object re-identification (default is `0.4`).
 - `TRAJECTORY_LENGTH`: The maximum length of the trajectory line to be drawn for each tracked object (default is `50`).
 
+
 ### Execution
 
 Once the environment is set up and the parameters in `src/config.py` are adjusted, go to a terminal in the project's root folder and execute:
@@ -51,6 +52,15 @@ python src/main.py
 ```
 
 If you are running on Webcam mode, you can close the window by pressing "q"
+
+## Video resources
+The video resources used in this project are:
+
+| Asset | Details |
+|-------|---------|
+| test_video_1.mp4 | **Author:** Manuel Mata Gallego  <br> **Source:** [Vecteezy](https://es.vecteezy.com/video/36990287-trafico-carros-paso-en-la-carretera-con-asfalto-con-grietas-visto-desde-encima)  <br> **License:** Vecteezy Free License – attribution required.  <br> Stock footage by Vecteezy.com |
+| test_video_2.mp4 | **Author:** Mike Bird  <br> **Source:** [Pexels](https://www.pexels.com/video/traffic-flow-in-the-highway-2103099/)  <br> **License:** Pexels License – attribution is not mandatory but appreciated.  <br> Stock footage by Mike Bird via Pexels.com |
+
 
 ## Detection Model
 The detection model used is based on YOLOv8 and is trained on a custom dataset of license plates. The model and its training code is available at https://github.com/marcoom/yolo-licence-plate-training

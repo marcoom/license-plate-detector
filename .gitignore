@@ -8,5 +8,5 @@ __pycache__/
 *.egg-info
 *.egg
 *.log
-/data/*
+/data/*_processed.mp4
 /results/*

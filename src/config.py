@@ -19,8 +19,8 @@
 LOG_LEVEL = "INFO"
 
 # Video and processing
-INPUT_VIDEO = './data/3_multiple.mp4'  # File to process
-WEBCAM = True  # If True, use the webcam instead of the video file
+INPUT_VIDEO = './data/test_video_1.mp4'  # File to process
+WEBCAM = False  # If True, use the webcam instead of the video file
 DISPLAY_VIDEO = True  # If True, display the processed video in real-time
 SAVE_TO_VIDEO = True  # If True, save the processed video when WEBCAM=False
 SHOW_TRACKER_ID = True  # If True, show the tracker ID along with the plate
