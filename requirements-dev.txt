@@ -1,0 +1,5 @@
+sphinx>=8.0
+sphinx-autodoc-typehints
+sphinx-rtd-theme
+sphinxcontrib-napoleon
+rst2pdf

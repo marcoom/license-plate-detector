@@ -13,6 +13,14 @@ To run this project, you need to install the following requirements. You can ins
 pip install -r requirements.txt
 ```
 
+### Development and Documentation
+
+If you want to contribute to development or build the documentation, you should also install the development requirements:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
 ## Usage
 
 ### Configuration
