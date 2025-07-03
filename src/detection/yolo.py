@@ -16,7 +16,7 @@
 
 
 from ultralytics import YOLO
-from config import MODEL_PATH, YOLO_THRESHOLD
+import config as cfg
 import numpy as np
 
 class YOLODetector:
@@ -30,8 +30,8 @@ class YOLODetector:
 
         Load the YOLO model from the MODEL_PATH in the config file and set the threshold.
         """
-        self.model = YOLO(MODEL_PATH)
-        self.threshold = YOLO_THRESHOLD
+        self.model = YOLO(cfg.MODEL_PATH, task='detect', verbose=False)
+        self.threshold = cfg.YOLO_THRESHOLD
 
     def detect(self, frame: np.ndarray) -> list[tuple[list[float], float, int]]:
         """Detect objects in a given frame using YOLO.

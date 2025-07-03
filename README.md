@@ -56,7 +56,7 @@ export PYTHONPATH=$PYTHONPATH:$(pwd)
 Then run the project as follows:
 
 ```bash
-python src/main.py
+python src/app.py
 ```
 
 If you are running on Webcam mode, you can close the window by pressing "q"

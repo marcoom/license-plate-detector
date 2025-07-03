@@ -14,12 +14,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from config import WEBCAM, INPUT_VIDEO, SAVE_TO_VIDEO, CLOSE_WINDOW_KEY, YOLO_THRESHOLD, DISPLAY_VIDEO, SHOW_FPS
+from config import WEBCAM, INPUT_VIDEO, SAVE_TO_VIDEO, CLOSE_WINDOW_KEY, YOLO_THRESHOLD, SHOW_FPS
 from src.logging.logger import LoggerConfigurator
 from detection.yolo import YOLODetector
 from tracking.tracker import Tracker
 from ocr.ocr import OCRReader
 from video.video_handler import VideoHandler
+from ui.gradio_ui import build_interface
+import threading
 from ui.drawing import draw_fps_on_frame, FPSCounter
 import cv2
 from typing import Optional
@@ -64,6 +66,23 @@ class LicensePlateDetectorApp:
                 logger.info("Output video will be saved to: %s", output_path)
             self.video_handler = VideoHandler(INPUT_VIDEO, frame_width, frame_height, fps, output_path)
             logger.info("File video handler initialized.")
+    
+    def launch_gradio(self) -> None:
+        """
+        Launch the Gradio interface in a non-blocking way so that the main
+        application loop can continue to run in parallel.
+        """
+        iface = build_interface()
+
+        # Launch Gradio in a separate daemon thread so that the call does not
+        # block the execution of the rest of the application. When the main
+        # program exits, the daemon thread will automatically shut down.
+        threading.Thread(
+            target=iface.launch,
+            kwargs={"share": False, "server_port": 7860},
+            daemon=True,
+        ).start()
+        logger.info("Gradio interface initialized and running in background.")
 
     def run(self) -> None:
         """
@@ -71,6 +90,7 @@ class LicensePlateDetectorApp:
         """
         logger.info("Initializing video handler and entering main loop.")
         self.setup_video()
+        self.launch_gradio()
         if self.video_handler is None:
             logger.error("Video handler not initialized.")
             return
@@ -96,17 +116,11 @@ class LicensePlateDetectorApp:
 
             if self.video_handler.writer is not None:
                 self.video_handler.write_frame(frame)
-            if DISPLAY_VIDEO:
-                self.video_handler.show_frame("Processed Output", frame)
-                key = self.video_handler.wait_key(1) & 0xFF
-                if key == self.close_key:
-                    logger.info("Exiting program: user pressed the close window key '%s' (code: %s)", chr(self.close_key), self.close_key)
-                    break
+
         self.video_handler.release()
         if self.output_video_path:
             logger.info("Processed video saved to: %s", self.output_video_path)
-        if DISPLAY_VIDEO:
-            VideoHandler.destroy_all_windows()
+
         logger.info("Exiting main loop.")
 
 def main() -> None:
@@ -114,9 +128,10 @@ def main() -> None:
     Entry point for the license plate detector app.
     """
     LoggerConfigurator().setup_logging()
-    logger.info("Starting License Plate Detector application.")
-    app = LicensePlateDetectorApp()
-    app.run()
+    logger.info("Starting Gradio interface only (processing runs from UI).")
+
+    iface = build_interface()
+    iface.launch(share=False, server_port=7860)
 
 if __name__ == "__main__":
     main()

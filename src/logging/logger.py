@@ -22,7 +22,7 @@ Provides a LoggerConfigurator class to set up logging based on the config-define
 from typing import Optional
 import logging
 import sys
-from src.config import LOG_LEVEL
+from config import LOG_LEVEL
 
 class LoggerConfigurator:
     """
