@@ -14,30 +14,32 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from __future__ import annotations  # Allows forward references in type hints
+from __future__ import annotations
 
-import gradio as gr
+import logging
+import os
+import signal
+from typing import Any, Dict, Generator, Optional
+
 import cv2
+import gradio as gr
 import numpy as np
-from typing import Generator, Optional, Dict, Any
 
-import config as cfg  # Use runtime config values throughout the session
-from ui.drawing import draw_fps_on_frame, FPSCounter
+import config as cfg
+from ui.drawing import FPSCounter, draw_fps_on_frame
 
-def _prepare_app(video_path: Optional[str]) -> 'LicensePlateDetectorApp':
-    """Helper that prepares a new ``LicensePlateDetectorApp`` instance.
+logger = logging.getLogger(__name__)
 
-    The function dynamically adjusts the global configuration flags so that
-    ``LicensePlateDetectorApp`` initialises the correct ``VideoHandler`` for
-    the provided *video_path* (``None`` indicates that the webcam should be
-    used).
+def _prepare_app(video_path: Optional[str]) -> "LicensePlateDetectorApp":
+    """Create an app instance ready to process *video_path*.
+
+    If *video_path* is *None* the webcam is selected instead.
     """
-    import config as cfg  # Imported here to avoid circular imports
-    from app import LicensePlateDetectorApp  # Local import to avoid circular dependency
+
+    from app import LicensePlateDetectorApp  # Local import to break circularity
 
     if video_path is None:
         cfg.WEBCAM = True
-        #cfg.INPUT_VIDEO = ""
     else:
         cfg.WEBCAM = False
         cfg.INPUT_VIDEO = video_path
@@ -46,24 +48,20 @@ def _prepare_app(video_path: Optional[str]) -> 'LicensePlateDetectorApp':
 
 
 def process_video(video: Optional[str | Dict[str, Any]]) -> Generator[np.ndarray, None, None]:
-    """Gradio callback that processes a video (or webcam) and **streams** the
-    processed frames to the *Image* component.
+    """Yield processed frames to Gradio.
 
     Parameters
     ----------
-    video
-        A string path to a video file provided by the *gr.Video* component or
-        ``None`` when the *Run* button is pressed with no video selected
-        (webcam mode).
+    video: str | dict | None
+        Filepath selected in the UI or *None* for default source.
 
     Yields
     ------
     numpy.ndarray
-        Frames in **RGB** colour space ready to be displayed by Gradio.
+        RGB frames suitable for ``gr.Image`` streaming.
     """
-    # ``gr.File`` (with ``type='filepath'``) returns the selected file path as
-    # a plain string. Older configurations may return a dict with a temporary
-    # file path under the ``"name"`` key. Handle both.
+    # `gr.File` can return a path (str) or a dict with the path under the "name" key.
+
     if isinstance(video, dict):
         video_path = video.get("name")
     elif isinstance(video, str):
@@ -91,7 +89,6 @@ def process_video(video: Optional[str | Dict[str, Any]]) -> Generator[np.ndarray
         if not ret:
             break
 
-        # Main processing pipeline (detection, tracking, OCR) -----------------
         detections = app.yolo_detector.detect(frame)
         if detections:
             app.tracker.process_detections(detections, frame, app.ocr_reader.reader)
@@ -100,9 +97,6 @@ def process_video(video: Optional[str | Dict[str, Any]]) -> Generator[np.ndarray
             fps_counter.update()
             draw_fps_on_frame(frame, fps_counter.get_fps())
 
-        # --------------------------------------------------------------------
-
-        # Convert BGR (OpenCV) -> RGB for Gradio.
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         yield frame_rgb
 
@@ -113,35 +107,26 @@ def process_video(video: Optional[str | Dict[str, Any]]) -> Generator[np.ndarray
     return
 
 
-def build_interface():
-    # Ensure default behaviour: unless the user explicitly toggles webcam elsewhere,
-    # we process the demo video bundled with the project.
+def build_interface() -> gr.Blocks:
+    """Construct and return the Gradio UI for the license-plate detector."""
+
+    # Default to demo video unless the user selects otherwise.
     cfg.WEBCAM = False
 
     with gr.Blocks() as demo:
-        # ----------------------- CALLBACKS -----------------------------
         def update_cfg(attr: str):
-            """Returns a callback that updates *attr* of ``config`` with the incoming value."""
+            """Create a callback that writes *value* into ``cfg.attr``."""
             def _inner(value):
                 setattr(cfg, attr, value)
-                return None  # No component updates required
+                return None
             return _inner
 
         def toggle_trajectory_slider(show: bool):
-            """Show/hide and enable/disable the trajectory length slider when the checkbox changes."""
-            # Update runtime configuration so that the rest of the app sees the change
             cfg.SHOW_TRAJECTORY = show
-            # `visible` completely hides the component, `interactive` controls whether the
-            # slider can be dragged when it *is* visible.
             return gr.update(visible=show, interactive=show)
 
         def on_model_type_change(model_type: str):
-            # Map UI selection to model path stored in cfg
-            if model_type == "PyTorch":
-                cfg.MODEL_PATH = "./models/car_plate.pt"
-            else:
-                cfg.MODEL_PATH = "./models/best_ncnn_model"
-            return None
+            cfg.MODEL_PATH = "./models/car_plate.pt" if model_type == "PyTorch" else "./models/best_ncnn_model"
 
         # -----------------------------------------------------------------
 
@@ -177,8 +162,8 @@ def build_interface():
                 input_video.change(_on_file_selected, input_video, None)
             with gr.Column(scale=10):
                 stop_button = gr.Button("Stop", elem_id="stop_button", variant="stop", visible=False)
-            with gr.Column(scale=10):
-                run_button = gr.Button("Run", elem_id="run_button", variant="primary")
+                run_button = gr.Button("Run", elem_id="run_button", variant="primary", visible=True)
+
         with gr.Accordion("Settings 🛠️", open=False): # When running, settings can't be modified (should be grayed out)
             with gr.Tab("System"):
                 with gr.Row():
@@ -274,10 +259,16 @@ def build_interface():
             slider_model_type.change(on_model_type_change, slider_model_type, None)
             # ---------------------------------------------------------------------
 
-        # ----------------- Enable / Disable settings during processing ------------------
+
+        examples = gr.Examples(
+            examples=[["./data/test_video_1.mp4"], ["./data/test_video_2.mp4"]],
+            inputs=input_video,
+            label="Example Videos"
+        )
+
         
 
-        # Components that should be disabled while processing is running
+        # Components that are disabled while processing is running
         settings_components = [
             slider_model_type,
             slider_detection_threshold,
@@ -293,19 +284,45 @@ def build_interface():
             input_video,
         ]
 
+        def log_run(video_path):
+            """Log current configuration when *Run* is pressed."""
+            current_settings = {
+                "INPUT_VIDEO": cfg.INPUT_VIDEO,
+                "WEBCAM": cfg.WEBCAM,
+                "MODEL_PATH": cfg.MODEL_PATH,
+                "YOLO_THRESHOLD": cfg.YOLO_THRESHOLD,
+                "OCR_CONFIDENCE_THRESHOLD": cfg.OCR_CONFIDENCE_THRESHOLD,
+                "COSINE_DISTANCE_THRESHOLD": cfg.COSINE_DISTANCE_THRESHOLD,
+                "N_INIT": cfg.N_INIT,
+                "MAX_AGE": cfg.MAX_AGE,
+                "SHOW_TRACKER_ID": cfg.SHOW_TRACKER_ID,
+                "SHOW_FPS": cfg.SHOW_FPS,
+                "SHOW_TRAJECTORY": cfg.SHOW_TRAJECTORY,
+                "TRAJECTORY_LENGTH": cfg.TRAJECTORY_LENGTH,
+            }
+            logger.info("Run button clicked. Current settings: %s", current_settings)
+            return None
+
         def _disable_settings():
-            """Disable all settings components."""
             return [gr.update(interactive=False) for _ in settings_components]
 
-        # ----------------- Wire Run button chain ------------------
+
         run_event = (
-            run_button.click(_disable_settings, None, settings_components, queue=False)
-            .then(lambda: gr.update(interactive=False), None, run_button, queue=False)
+            run_button.click(log_run, [input_video], None, queue=False)
+            .then(_disable_settings, None, settings_components, queue=False)
             .then(lambda: gr.update(visible=True), None, output_image, queue=False)
+            .then(lambda: gr.update(interactive=False, visible=False), None, run_button, queue=False)
             .then(lambda: gr.update(visible=True), None, stop_button, queue=False)
             .then(process_video, inputs=input_video, outputs=output_image, queue=True)
             .then(lambda: gr.update(interactive=True), None, run_button, queue=False)
         )
+
+
+        def stop_process():
+            logger.info("Stop button clicked – terminating processing loop.")
+            os.kill(os.getpid(), signal.SIGINT)
+
+        stop_button.click(stop_process, None, None, queue=False)
 
         # Enable queuing so that generator outputs are streamed properly.
         demo.queue()

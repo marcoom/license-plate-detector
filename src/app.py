@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from config import WEBCAM, INPUT_VIDEO, SAVE_TO_VIDEO, CLOSE_WINDOW_KEY, YOLO_THRESHOLD, SHOW_FPS
+from config import WEBCAM, INPUT_VIDEO, SAVE_TO_VIDEO, YOLO_THRESHOLD, SHOW_FPS
 from src.logging.logger import LoggerConfigurator
 from detection.yolo import YOLODetector
 from tracking.tracker import Tracker
@@ -40,7 +40,6 @@ class LicensePlateDetectorApp:
         self.ocr_reader = OCRReader(languages=['en'])
         self.video_handler: Optional[VideoHandler] = None
         self.output_video_path: Optional[str] = None
-        self.close_key = ord(CLOSE_WINDOW_KEY.lower())
 
     def setup_video(self) -> None:
         """
@@ -128,7 +127,7 @@ def main() -> None:
     Entry point for the license plate detector app.
     """
     LoggerConfigurator().setup_logging()
-    logger.info("Starting Gradio interface only (processing runs from UI).")
+    logger.info("Starting Gradio interface.")
 
     iface = build_interface()
     iface.launch(share=False, server_port=7860)

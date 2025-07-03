@@ -18,14 +18,13 @@
 LOG_LEVEL = "INFO" # Logging level configuration (e.g., 'INFO', 'DEBUG', 'WARNING')
 
 # Video and processing
-INPUT_VIDEO = './data/test_video_1.mp4'  # File to process
+INPUT_VIDEO = './data/test_video_2.mp4'  # File to process
 WEBCAM = True  # If True, use the webcam instead of the video file
 SAVE_TO_VIDEO = False  # If True, save the processed video when WEBCAM=False
 SHOW_TRACKER_ID = True  # If True, show the tracker ID along with the plate
 SHOW_FPS = True  # If True, display the FPS counter in the top-left corner
 SHOW_TRAJECTORY = True  # If True, show the trajectory of the tracked objects
 TRAJECTORY_LENGTH = 50  # Maximum length of the trajectory
-CLOSE_WINDOW_KEY = 'q'  # Key to close the video window
 
 # Model and processing parameters
 MODEL_PATH = './models/best_ncnn_model' # Model can be ncnn (./models/best_ncnn_model) or torch file (./models/car_plate.pt)

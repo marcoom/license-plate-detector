@@ -18,6 +18,9 @@
 from ultralytics import YOLO
 import config as cfg
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 class YOLODetector:
     """YOLO Detector class.
@@ -32,6 +35,7 @@ class YOLODetector:
         """
         self.model = YOLO(cfg.MODEL_PATH, task='detect', verbose=False)
         self.threshold = cfg.YOLO_THRESHOLD
+        logger.info("YOLO model loaded from %s with threshold %.2f", cfg.MODEL_PATH, self.threshold)
 
     def detect(self, frame: np.ndarray) -> list[tuple[list[float], float, int]]:
         """Detect objects in a given frame using YOLO.
@@ -49,4 +53,5 @@ class YOLODetector:
             if score > self.threshold:
                 bbox = [x1, y1, x2 - x1, y2 - y1]
                 detections.append((bbox, score, class_id))
+        logger.debug("Detected %d objects above threshold %.2f", len(detections), self.threshold)
         return detections
