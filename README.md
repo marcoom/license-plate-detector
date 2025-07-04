@@ -103,9 +103,11 @@ python src/app.py
 
 ---
 
-## Gradio Web Interface
+## User Interface
 
-The Gradio UI provides an easy way to upload/select video, switch between webcam and file, and adjust all detection/tracking parameters interactively. All configuration changes are applied live.
+The Gradio UI provides an easy way to upload/select video, switch between webcam and file, and adjust all detection/tracking parameters interactively.
+
+![User Interface](media/user_interface.png)
 
 ---
 

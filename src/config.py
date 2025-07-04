@@ -18,8 +18,8 @@
 LOG_LEVEL = "INFO" # Logging level configuration (e.g., 'INFO', 'DEBUG', 'WARNING')
 
 # Video and processing
-INPUT_VIDEO = './data/test_video_2.mp4'  # File to process
-WEBCAM = True  # If True, use the webcam instead of the video file
+INPUT_VIDEO = './data/test_video_1.mp4'  # File to process
+WEBCAM = False  # If True, use the webcam instead of the video file
 SAVE_TO_VIDEO = False  # If True, save the processed video when WEBCAM=False
 SHOW_TRACKER_ID = True  # If True, show the tracker ID along with the plate
 SHOW_FPS = True  # If True, display the FPS counter in the top-left corner

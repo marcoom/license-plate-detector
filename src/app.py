@@ -41,7 +41,7 @@ class LicensePlateDetectorApp:
         self.video_handler: Optional[VideoHandler] = None
         self.output_video_path: Optional[str] = None
 
-    def setup_video(self) -> None:
+    def setup_video(self, WEBCAM, INPUT_VIDEO) -> None:
         """
         Set up video capture and writer based on configuration.
         """
