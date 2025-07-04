@@ -16,7 +16,7 @@
 
 import cv2
 from typing import List, Tuple, Optional
-from config import SHOW_TRACKER_ID
+import config as cfg
 import logging
 
 logger = logging.getLogger(__name__)
@@ -76,7 +76,7 @@ def draw_plate_on_frame(
     font_scale = 0.7
     font_thickness = 2
     text = plate_text.upper()
-    if SHOW_TRACKER_ID and track_id is not None:
+    if cfg.SHOW_TRACKER_ID and track_id is not None:
         text = f'ID {track_id}: {text}'
         logger.debug("Drawing plate with tracker ID %s: %s", track_id, plate_text)
     else:

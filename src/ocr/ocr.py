@@ -17,6 +17,9 @@
 from collections import Counter
 from typing import Dict, List, Optional
 import easyocr
+import logging
+
+logger = logging.getLogger(__name__)
 
 class OCRReader:
     """
@@ -31,6 +34,7 @@ class OCRReader:
         """
         self.reader = easyocr.Reader(languages)
         self.ocr_history: Dict[int, List[str]] = {}
+        logger.info("OCRReader initialized with languages: %s", languages)
 
     def read_plate(self, img_license, track_id: int, confidence_threshold: float) -> Optional[str]:
         """
@@ -45,10 +49,13 @@ class OCRReader:
             Optional[str]: Most common plate text for the track, or None if not available.
         """
         ocr_results = self.reader.readtext(img_license)
+        logger.debug("OCR read for track_id=%s, results=%s", track_id, ocr_results)
         if track_id not in self.ocr_history:
             self.ocr_history[track_id] = []
+            logger.debug("Created new OCR history for track_id=%s", track_id)
         if ocr_results:
             _, text, confidence = ocr_results[0]
+            logger.debug("OCR result: text='%s', confidence=%.2f, threshold=%.2f", text, confidence, confidence_threshold)
             if isinstance(text, str) and confidence >= confidence_threshold:
                 self.ocr_history[track_id].append(text)
         return self.get_most_common_plate(track_id)

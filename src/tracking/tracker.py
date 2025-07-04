@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Any, Dict, List, Tuple
-from src.config import COSINE_DISTANCE_THRESHOLD, MAX_AGE, N_INIT, SHOW_TRAJECTORY, TRAJECTORY_LENGTH, OCR_CONFIDENCE_THRESHOLD
+import config as cfg
 from deep_sort_realtime.deepsort_tracker import DeepSort
 from ui.interface import VideoInterface
 from ocr.ocr import OCRReader
@@ -34,13 +34,13 @@ class Tracker:
         Initialize the DeepSort tracker and supporting data structures.
         """
         self.tracker = DeepSort(
-            max_age=MAX_AGE,
-            n_init=N_INIT,
+            max_age=cfg.MAX_AGE,
+            n_init=cfg.N_INIT,
             embedder="mobilenet",
-            max_cosine_distance=COSINE_DISTANCE_THRESHOLD,
+            max_cosine_distance=cfg.COSINE_DISTANCE_THRESHOLD,
             nn_budget=None
         )
-        logger.info("DeepSort tracker initialized with max_age=%d, n_init=%d", MAX_AGE, N_INIT)
+        logger.info("DeepSort tracker initialized with max_age=%d, n_init=%d", cfg.MAX_AGE, cfg.N_INIT)
         self.ocr_history: Dict[int, List[str]] = {}
         self.trajectories: Dict[int, List[Tuple[int, int]]] = {}
 
@@ -80,7 +80,7 @@ class Tracker:
             if ocr_results:
                 _, text, confidence = ocr_results[0]
                 logger.debug("OCR result for track %s: '%s' (confidence: %.2f)", track_id, text, confidence)
-                if isinstance(text, str) and confidence >= OCR_CONFIDENCE_THRESHOLD:
+                if isinstance(text, str) and confidence >= cfg.OCR_CONFIDENCE_THRESHOLD:
                     self.ocr_history[track_id].append(text)
             most_common_plate = OCRReader.get_most_common_plate(self.ocr_history, track_id)
             draw_plate_on_frame(frame, most_common_plate, x1, y1, x2, y2, track_id)
@@ -98,9 +98,9 @@ class Tracker:
         if track_id not in self.trajectories:
             self.trajectories[track_id] = []
         self.trajectories[track_id].append((center_x, center_y))
-        if len(self.trajectories[track_id]) > TRAJECTORY_LENGTH:
-            self.trajectories[track_id] = self.trajectories[track_id][-TRAJECTORY_LENGTH:]
-        if SHOW_TRAJECTORY:
+        if len(self.trajectories[track_id]) > cfg.TRAJECTORY_LENGTH:
+            self.trajectories[track_id] = self.trajectories[track_id][-cfg.TRAJECTORY_LENGTH:]
+        if cfg.SHOW_TRAJECTORY:
             draw_trajectory(frame, self.trajectories[track_id])
 
     def process_detections(self, detections: List[Tuple[Any, float, int]], frame: np.ndarray, ocr_reader: Any) -> None:
