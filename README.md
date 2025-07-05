@@ -16,6 +16,8 @@ This project is a system for detecting vehicle license plates from video or real
 - Save processed video with overlays
 - Interactive Gradio web UI for easy use and configuration
 
+![System Architecture](media/system_architecture.png)
+
 ---
 
 ## Project Structure
