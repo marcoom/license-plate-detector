@@ -5,6 +5,7 @@ __pycache__/
 .vscode/
 /docs/build
 /dist
+/build
 *.egg-info
 *.egg
 *.log
