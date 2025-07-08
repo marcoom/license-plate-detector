@@ -1,5 +1,13 @@
-sphinx>=8.0
-sphinx-autodoc-typehints
-sphinx-rtd-theme
-sphinxcontrib-napoleon
-rst2pdf
+# Development tools
+build==1.2.2.post1
+
+# Documentation
+sphinx==8.2.3
+sphinx-autodoc-typehints==3.2.0
+sphinx-rtd-theme==3.0.2
+sphinxcontrib-napoleon==0.7
+rst2pdf==0.103.1
+
+# Testing dependencies
+# pytest
+# pytest-cov
