@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from config import WEBCAM, INPUT_VIDEO, SAVE_TO_VIDEO, YOLO_THRESHOLD, SHOW_FPS
-from src.logging.logger import LoggerConfigurator
+from utils.logger import LoggerConfigurator
 from detection.yolo import YOLODetector
 from tracking.tracker import Tracker
 from ocr.ocr import OCRReader

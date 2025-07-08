@@ -11,12 +11,12 @@ Source Code Documentation
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: logging.logger
+.. automodule:: utils.logger
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: main
+.. automodule:: app
     :members:
     :undoc-members:
     :show-inheritance:

@@ -5,8 +5,6 @@ This project is a system for detecting vehicle license plates from video or real
 
 ![Detection Example](media/animation.gif)
 
----
-
 ## Features
 
 - Detect license plates in video files or live webcam
@@ -15,8 +13,7 @@ This project is a system for detecting vehicle license plates from video or real
 - Visualize tracker IDs, object trajectories, and FPS
 - Save processed video with overlays
 - Interactive Gradio web UI for easy use and configuration
-
-![System Architecture](media/system_architecture.png)
+- Clean Python package structure with proper dependency management
 
 ---
 
@@ -25,36 +22,56 @@ This project is a system for detecting vehicle license plates from video or real
 ```
 license-plate-detector/
 ├── src/
+│   ├── __init__.py         # Package definition
 │   ├── app.py              # Main entry point
 │   ├── config.py           # Configuration variables
 │   ├── detection/          # YOLO detector logic
+│   │   ├── __init__.py
+│   │   └── yolo.py
 │   ├── ocr/                # OCR utilities
+│   │   ├── __init__.py
+│   │   └── ocr.py
 │   ├── tracking/           # DeepSORT tracker
-│   ├── ui/
+│   │   ├── __init__.py
+│   │   └── tracker.py
+│   ├── ui/                 # User interface components
+│   │   ├── __init__.py
 │   │   ├── gradio_ui.py    # Gradio web interface
 │   │   ├── drawing.py      # Drawing overlays
 │   │   └── interface.py    # Video overlay helpers
 │   ├── video/              # Video capture and saving
-│   └── logging/            # Logging setup
-├── requirements.txt
-├── requirements-dev.txt
-├── media/
-└── ...
+│   │   ├── __init__.py
+│   │   └── video_handler.py
+│   └── utils/              # Utility functions
+│       ├── __init__.py
+│       └── logger.py
+├── setup.py               # Package installation script
+├── Makefile               # Development task automation
+├── requirements.txt       # Runtime dependencies
+├── requirements-dev.txt   # Development dependencies
+├── media/                 # Media assets
+└── README.md              # This file
 ```
 
 ---
 
-## Requirements
+## Installation
 
-Install runtime dependencies:
+### Prerequisites
+- Python 3.11 or higher
+- pip (Python package manager)
+- make (for development tasks)
 
+### Minimal installation
+The following commands creates a virtual environment and installs the package dependencies for running the application.
 ```bash
-pip install -r requirements.txt
+make install
 ```
-For development and docs:
 
+### Development installation
+Run the following command, that installs the required packages for running the application and also for development tasks (such as building documentation, executing tests or building packages)
 ```bash
-pip install -r requirements-dev.txt
+make install-dev
 ```
 
 ---
@@ -81,23 +98,10 @@ Edit `src/config.py` to customize behavior:
 ---
 
 ## Usage
-
-### 1. Set up environment
-
-```bash
-pip install -r requirements.txt
-```
-
-### 2. (Optional) Set Python path
+To run the app, execute:
 
 ```bash
-export PYTHONPATH=$PYTHONPATH:$(pwd)
-```
-
-### 3. Run the app
-
-```bash
-python src/app.py
+make run
 ```
 
 - By default, the Gradio web UI will launch at http://localhost:7860
@@ -133,10 +137,45 @@ The detection model used is based on YOLOv8 and is trained on a custom dataset o
 HTML and PDF documentation is generated with Sphinx. To build docs:
 
 ```bash
-pip install -r requirements-dev.txt
-cd docs
-make html    # for HTML docs
-make pdf     # for PDF docs
+make docs
+```
+The documentation is generated inside the /docs/build directory.
+
+More Make commands are available to generate only html (make docs-html), pdf (make docs-pdf) or remove documentation building files (make docs-clean).
+
+
+---
+
+## Building Distributions
+
+To see all available make commands and their descriptions, run:
+
+```bash
+make help
+```
+
+To build source and wheel distributions for the package:
+
+```bash
+# Build source and wheel distributions
+make dist
+
+# Clean build artifacts
+make clean
+```
+
+This will create both a source distribution (`.tar.gz`) and a wheel (`.whl`) in the `dist/` directory. The distributions will include all necessary files specified in `setup.py`.
+
+To install the built wheel:
+
+```bash
+pip install dist/*.whl
+```
+
+Or install directly from the source distribution:
+
+```bash
+pip install dist/*.tar.gz
 ```
 
 ---
