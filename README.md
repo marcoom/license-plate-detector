@@ -147,13 +147,6 @@ More Make commands are available to generate only html (make docs-html), pdf (ma
 ---
 
 ## Building Distributions
-
-To see all available make commands and their descriptions, run:
-
-```bash
-make help
-```
-
 To build source and wheel distributions for the package:
 
 ```bash
@@ -176,6 +169,15 @@ Or install directly from the source distribution:
 
 ```bash
 pip install dist/*.tar.gz
+```
+
+---
+
+## Help
+To see all available make commands and their descriptions, run:
+
+```bash
+make help
 ```
 
 ---
