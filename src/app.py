@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from config import WEBCAM, INPUT_VIDEO, SAVE_TO_VIDEO, YOLO_THRESHOLD, SHOW_FPS
+from config import SAVE_TO_VIDEO, SHOW_FPS, WEBCAM, INPUT_VIDEO
 from utils.logger import LoggerConfigurator
 from detection.yolo import YOLODetector
 from tracking.tracker import Tracker
@@ -26,18 +26,19 @@ from ui.drawing import draw_fps_on_frame, FPSCounter
 import cv2
 from typing import Optional
 import logging
-import time
 
 logger = logging.getLogger(__name__)
+
 
 class LicensePlateDetectorApp:
     """
     Main application class for license plate detection, tracking, and OCR.
     """
+
     def __init__(self) -> None:
         self.yolo_detector = YOLODetector()
         self.tracker = Tracker()
-        self.ocr_reader = OCRReader(languages=['en'])
+        self.ocr_reader = OCRReader(languages=["en"])
         self.video_handler: Optional[VideoHandler] = None
         self.output_video_path: Optional[str] = None
 
@@ -45,7 +46,9 @@ class LicensePlateDetectorApp:
         """
         Set up video capture and writer based on configuration.
         """
-        logger.info("Setting up video source (webcam=%s, input=%s)", WEBCAM, INPUT_VIDEO)
+        logger.info(
+            "Setting up video source (webcam=%s, input=%s)", WEBCAM, INPUT_VIDEO
+        )
         if WEBCAM:
             self.video_handler = VideoHandler(0)
             logger.info("Webcam video handler initialized.")
@@ -60,12 +63,14 @@ class LicensePlateDetectorApp:
             cap.release()
             output_path = None
             if SAVE_TO_VIDEO:
-                output_path = INPUT_VIDEO.rsplit('.', 1)[0] + '_processed.mp4'
+                output_path = INPUT_VIDEO.rsplit(".", 1)[0] + "_processed.mp4"
                 self.output_video_path = output_path
                 logger.info("Output video will be saved to: %s", output_path)
-            self.video_handler = VideoHandler(INPUT_VIDEO, frame_width, frame_height, fps, output_path)
+            self.video_handler = VideoHandler(
+                INPUT_VIDEO, frame_width, frame_height, fps, output_path
+            )
             logger.info("File video handler initialized.")
-    
+
     def launch_gradio(self) -> None:
         """
         Launch the Gradio interface in a non-blocking way so that the main
@@ -88,7 +93,7 @@ class LicensePlateDetectorApp:
         Run the main application loop.
         """
         logger.info("Initializing video handler and entering main loop.")
-        self.setup_video()
+        self.setup_video(WEBCAM, INPUT_VIDEO)
         self.launch_gradio()
         if self.video_handler is None:
             logger.error("Video handler not initialized.")
@@ -97,15 +102,22 @@ class LicensePlateDetectorApp:
         fps_counter = FPSCounter()
         while True:
             ret, frame = self.video_handler.read_frame()
-            if not ret:
-                logger.info("No more frames to read or error reading frame. Exiting loop.")
+            if not ret or frame is None:
+                logger.info(
+                    "No more frames to read or error reading frame. Exiting loop."
+                )
                 break
+            assert frame is not None
             fps_counter.update()
 
             detections = self.yolo_detector.detect(frame)
             if detections:
-                logger.debug("Detections found on frame %d: %s", frame_count, detections)
-                self.tracker.process_detections(detections, frame, self.ocr_reader.reader)
+                logger.debug(
+                    "Detections found on frame %d: %s", frame_count, detections
+                )
+                self.tracker.process_detections(
+                    detections, frame, self.ocr_reader.reader
+                )
             else:
                 logger.debug("No detections on frame %d", frame_count)
 
@@ -122,6 +134,7 @@ class LicensePlateDetectorApp:
 
         logger.info("Exiting main loop.")
 
+
 def main() -> None:
     """
     Entry point for the license plate detector app.
@@ -131,6 +144,7 @@ def main() -> None:
 
     iface = build_interface()
     iface.launch(share=False, server_port=7860)
+
 
 if __name__ == "__main__":
     main()

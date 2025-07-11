@@ -7,4 +7,4 @@ using the DeepSORT algorithm.
 
 from .tracker import Tracker
 
-__all__ = ['Tracker']
+__all__ = ["Tracker"]

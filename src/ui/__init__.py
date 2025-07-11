@@ -9,4 +9,4 @@ from .gradio_ui import build_interface
 from .drawing import draw_fps_on_frame, FPSCounter
 from .interface import VideoInterface
 
-__all__ = ['build_interface', 'draw_fps_on_frame', 'FPSCounter', 'VideoInterface']
+__all__ = ["build_interface", "draw_fps_on_frame", "FPSCounter", "VideoInterface"]

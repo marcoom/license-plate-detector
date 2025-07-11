@@ -8,4 +8,4 @@ frame processing.
 
 from .video_handler import VideoHandler
 
-__all__ = ['VideoHandler']
+__all__ = ["VideoHandler"]

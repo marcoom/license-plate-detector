@@ -9,5 +9,9 @@ sphinxcontrib-napoleon==0.7
 rst2pdf==0.103.1
 
 # Testing dependencies
-# pytest
-# pytest-cov
+pytest==8.4.1
+pytest-cov==6.2.1
+
+# Code quality
+black==25.1.0
+mypy==1.16.1

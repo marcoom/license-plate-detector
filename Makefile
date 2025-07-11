@@ -16,6 +16,7 @@
 VENV ?= .venv
 PYTHON := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
+SRC := src
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 DOCSSOURCEDIR = docs/source
@@ -48,15 +49,28 @@ clean:
 	rm -rf build dist *.egg-info .pytest_cache || true
 
 # ------------------------------------------------------------
-# TESTING (commented until implemented)
+# CODE QUALITY
 # ------------------------------------------------------------
-# test:
-# 	@echo "Running ALL tests with pytest..."
-# 	$(VENV)/bin/pytest -q
-#
-# test-coverage:
-# 	@echo "Running tests with coverage..."
-# 	$(VENV)/bin/pytest --cov=src --cov-report=term-missing
+lint:
+	$(PYTHON) -m ruff check $(SRC)
+
+format:
+	$(PYTHON) -m ruff format $(SRC)
+	$(PYTHON) -m black $(SRC)
+
+type-check:
+	$(PYTHON) -m mypy $(SRC)
+
+# ------------------------------------------------------------
+# TESTING
+# ------------------------------------------------------------
+test:
+	@echo "Running tests with pytest..."
+	@PYTHONPATH=src $(VENV)/bin/pytest -q
+
+test-coverage:
+	@echo "Running tests with coverage..."
+	@PYTHONPATH=src $(VENV)/bin/pytest --cov=src --cov-report=term-missing
 
 # ------------------------------------------------------------
 # BUILD & RUN
