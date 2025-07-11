@@ -7,4 +7,4 @@ the application, including logging configuration and other helper utilities.
 
 from .logger import LoggerConfigurator
 
-__all__ = ['LoggerConfigurator']
+__all__ = ["LoggerConfigurator"]

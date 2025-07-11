@@ -17,7 +17,6 @@
 from typing import Any, Dict, List, Tuple
 import config as cfg
 from deep_sort_realtime.deepsort_tracker import DeepSort
-from ui.interface import VideoInterface
 from ocr.ocr import OCRReader
 from ui.drawing import draw_plate_on_frame, draw_trajectory
 import numpy as np
@@ -25,10 +24,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Tracker:
     """
     Encapsulates DeepSort tracking, OCR history, and trajectory management.
     """
+
     def __init__(self) -> None:
         """
         Initialize the DeepSort tracker and supporting data structures.
@@ -38,13 +39,19 @@ class Tracker:
             n_init=cfg.N_INIT,
             embedder="mobilenet",
             max_cosine_distance=cfg.COSINE_DISTANCE_THRESHOLD,
-            nn_budget=None
+            nn_budget=None,
         )
-        logger.info("DeepSort tracker initialized with max_age=%d, n_init=%d", cfg.MAX_AGE, cfg.N_INIT)
+        logger.info(
+            "DeepSort tracker initialized with max_age=%d, n_init=%d",
+            cfg.MAX_AGE,
+            cfg.N_INIT,
+        )
         self.ocr_history: Dict[int, List[str]] = {}
         self.trajectories: Dict[int, List[Tuple[int, int]]] = {}
 
-    def update_tracks(self, detections: List[Tuple[Any, float, int]], frame: np.ndarray) -> None:
+    def update_tracks(
+        self, detections: List[Tuple[Any, float, int]], frame: np.ndarray
+    ) -> None:
         """
         Update tracks using the DeepSort tracker.
 
@@ -55,7 +62,9 @@ class Tracker:
         logger.debug("Updating tracks with %d detections", len(detections))
         self.tracker.update_tracks(detections, frame=frame)
 
-    def process_single_track(self, track: Any, frame: np.ndarray, ocr_reader: Any) -> None:
+    def process_single_track(
+        self, track: Any, frame: np.ndarray, ocr_reader: Any
+    ) -> None:
         """
         Process a single tracked object: apply OCR and update OCR history.
 
@@ -79,10 +88,17 @@ class Tracker:
                 logger.debug("Created new OCR history for track %s", track_id)
             if ocr_results:
                 _, text, confidence = ocr_results[0]
-                logger.debug("OCR result for track %s: '%s' (confidence: %.2f)", track_id, text, confidence)
+                logger.debug(
+                    "OCR result for track %s: '%s' (confidence: %.2f)",
+                    track_id,
+                    text,
+                    confidence,
+                )
                 if isinstance(text, str) and confidence >= cfg.OCR_CONFIDENCE_THRESHOLD:
                     self.ocr_history[track_id].append(text)
-            most_common_plate = OCRReader.get_most_common_plate(self.ocr_history, track_id)
+            most_common_plate = OCRReader.get_most_common_plate(
+                self.ocr_history, track_id
+            )
             draw_plate_on_frame(frame, most_common_plate, x1, y1, x2, y2, track_id)
 
     def update_trajectory(self, track: Any, frame: np.ndarray) -> None:
@@ -99,11 +115,18 @@ class Tracker:
             self.trajectories[track_id] = []
         self.trajectories[track_id].append((center_x, center_y))
         if len(self.trajectories[track_id]) > cfg.TRAJECTORY_LENGTH:
-            self.trajectories[track_id] = self.trajectories[track_id][-cfg.TRAJECTORY_LENGTH:]
+            self.trajectories[track_id] = self.trajectories[track_id][
+                -cfg.TRAJECTORY_LENGTH :
+            ]
         if cfg.SHOW_TRAJECTORY:
             draw_trajectory(frame, self.trajectories[track_id])
 
-    def process_detections(self, detections: List[Tuple[Any, float, int]], frame: np.ndarray, ocr_reader: Any) -> None:
+    def process_detections(
+        self,
+        detections: List[Tuple[Any, float, int]],
+        frame: np.ndarray,
+        ocr_reader: Any,
+    ) -> None:
         """
         Process detections for the current frame, update tracks, OCR history, and draw trajectories.
 

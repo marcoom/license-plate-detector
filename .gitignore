@@ -11,3 +11,4 @@ __pycache__/
 *.log
 /data/*_processed.mp4
 /results/*
+.coverage

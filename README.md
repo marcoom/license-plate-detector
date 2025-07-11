@@ -132,7 +132,9 @@ The detection model used is based on YOLOv8 and is trained on a custom dataset o
 
 ---
 
-## Documentation
+## Developer Tools
+
+### Documentation
 
 HTML and PDF documentation is generated with Sphinx. To build docs:
 
@@ -144,9 +146,7 @@ The documentation is generated inside the /docs/build directory.
 More Make commands are available to generate only html (make docs-html), pdf (make docs-pdf) or remove documentation building files (make docs-clean).
 
 
----
-
-## Building Distributions
+### Building Distributions
 To build source and wheel distributions for the package:
 
 ```bash
@@ -171,9 +171,43 @@ Or install directly from the source distribution:
 pip install dist/*.tar.gz
 ```
 
+### Testing
+
+To run tests:
+
+```bash
+make test
+```
+
+To run tests with coverage:
+
+```bash
+make test-coverage
+```
+
+### Code Quality
+
+To check code quality:
+
+```bash
+make lint
+```
+
+To format code:
+
+```bash
+make format
+```
+
+To check types:
+
+```bash
+make type-check
+```
+
 ---
 
-## Help
+### Help
 To see all available make commands and their descriptions, run:
 
 ```bash

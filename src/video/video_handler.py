@@ -15,16 +15,27 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import cv2
+import numpy as np
 from typing import Optional
 import logging
 
+
 logger = logging.getLogger(__name__)
+
 
 class VideoHandler:
     """
     Handles video capture, writing, and display operations.
     """
-    def __init__(self, source: int | str, frame_width: int = None, frame_height: int = None, fps: float = None, output_path: Optional[str] = None) -> None:
+
+    def __init__(
+        self,
+        source: int | str,
+        frame_width: Optional[int] = None,
+        frame_height: Optional[int] = None,
+        fps: Optional[float] = None,
+        output_path: Optional[str] = None,
+    ) -> None:
         """
         Initialize the video handler.
 
@@ -43,28 +54,31 @@ class VideoHandler:
         self.writer = None
         self.output_path = output_path
         if output_path and frame_width and frame_height and fps:
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            self.writer = cv2.VideoWriter(output_path, fourcc, fps, (frame_width, frame_height))
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v") # type: ignore[attr-defined]
+            self.writer = cv2.VideoWriter(
+                output_path, fourcc, fps, (frame_width, frame_height)
+            )
             logger.info("Initialized video writer for: %s", output_path)
 
-    def read_frame(self) -> tuple[bool, Optional[cv2.Mat]]:
+    def read_frame(self) -> tuple[bool, np.ndarray | None]:
         """
         Read a frame from the video source.
 
         Returns:
-            tuple[bool, Optional[cv2.Mat]]: Success flag and the frame.
+            tuple[bool, np.ndarray | None]: Success flag and the frame.
         """
         ret, frame = self.cap.read()
-        if not ret:
+        if not ret or frame is None:
             logger.warning("Failed to read frame from video source.")
+        assert frame is not None
         return ret, frame
 
-    def write_frame(self, frame: cv2.Mat) -> None:
+    def write_frame(self, frame: np.ndarray) -> None:
         """
         Write a frame to the output video, if writer is enabled.
 
         Args:
-            frame (cv2.Mat): The frame to write.
+            frame (np.ndarray): The frame to write.
         """
         if self.writer:
             self.writer.write(frame)
@@ -89,13 +103,13 @@ class VideoHandler:
         """
         return self.cap.isOpened()
 
-    def show_frame(self, window_name: str, frame: cv2.Mat) -> None:
+    def show_frame(self, window_name: str, frame: np.ndarray) -> None:
         """
         Display a frame in a window.
 
         Args:
             window_name (str): Name of the display window.
-            frame (cv2.Mat): The frame to display.
+            frame (np.ndarray): The frame to display.
         """
         cv2.imshow(window_name, frame)
 

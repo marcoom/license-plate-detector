@@ -17,9 +17,10 @@
 from __future__ import annotations
 
 import logging
-import os
-import signal
-from typing import Any, Dict, Generator, Optional
+from typing import TYPE_CHECKING, Generator
+
+if TYPE_CHECKING:
+    from app import LicensePlateDetectorApp
 
 import cv2
 import gradio as gr
@@ -31,11 +32,15 @@ from ui.drawing import FPSCounter, draw_fps_on_frame
 
 logger = logging.getLogger(__name__)
 
-stop_event = threading.Event() # Global event to signal the processing loop to stop gracefully when the Stop Button is pressed
+stop_event = (
+    threading.Event()
+)  # Global event to signal the processing loop to stop gracefully when the Stop Button is pressed
+
 
 def _prepare_app() -> "LicensePlateDetectorApp":
     """Create an app instance based on the current `cfg` settings."""
     from app import LicensePlateDetectorApp  # Local import to break circularity
+
     # The cfg is assumed to be set correctly by the UI handlers.
     return LicensePlateDetectorApp()
 
@@ -62,8 +67,10 @@ def process_video() -> Generator[np.ndarray, None, None]:
             break
 
         ret, frame = app.video_handler.read_frame()
-        if not ret:
+        if not ret or frame is None:
             break
+
+        assert frame is not None
 
         detections = app.yolo_detector.detect(frame)
         if detections:
@@ -88,30 +95,35 @@ def build_interface() -> gr.Blocks:
     cfg.WEBCAM = False
 
     with gr.Blocks(title="License Plate Detector", theme="base") as demo:
-
         # ------------------------------ INPUT VIDEO VISUALIZER ------------------------------
         # Shows the processed video. Is visible only when processing.
-        output_image = gr.Image(show_label=False, interactive=False, visible=False, height=480)
+        output_image = gr.Image(
+            show_label=False, interactive=False, visible=False, height=480
+        )
         with gr.Row(equal_height=True, min_height=250):
-
-        # ------------------------------ SOURCE SELECTOR ------------------------------
-        # Allows to select between webcam and video file.
+            # ------------------------------ SOURCE SELECTOR ------------------------------
+            # Allows to select between webcam and video file.
 
             with gr.Column(scale=10):
                 input_source = gr.Radio(
                     choices=["Video File", "Webcam"],
                     label="Input Source",
-                    value="Video File"
+                    value="Video File",
                 )
 
-        # ------------------------------ FILE SELECTOR ------------------------------
-        # If source is "Video File", shows a file uploader.
+            # ------------------------------ FILE SELECTOR ------------------------------
+            # If source is "Video File", shows a file uploader.
 
             with gr.Column(scale=1):
-                input_video = gr.File(file_types=["video"], visible=True, value=cfg.INPUT_VIDEO, type="filepath")
+                input_video = gr.File(
+                    file_types=["video"],
+                    visible=True,
+                    value=cfg.INPUT_VIDEO,
+                    type="filepath",
+                )
 
                 def _on_source_change(src):
-                    webcam = (src == "Webcam")
+                    webcam = src == "Webcam"
                     cfg.WEBCAM = webcam
                     # Show uploader only for video file
                     return gr.update(visible=not webcam)
@@ -121,7 +133,11 @@ def build_interface() -> gr.Blocks:
                 def _on_file_selected(file):
                     if file is None:
                         return gr.update()
-                    path = file if isinstance(file, str) else file.get("name") if isinstance(file, dict) else None
+                    path = (
+                        file
+                        if isinstance(file, str)
+                        else file.get("name") if isinstance(file, dict) else None
+                    )
                     if path:
                         cfg.WEBCAM = False
                         cfg.INPUT_VIDEO = path
@@ -130,13 +146,17 @@ def build_interface() -> gr.Blocks:
 
                 input_video.change(_on_file_selected, input_video, input_source)
 
-        # ------------------------------ BUTTONS ------------------------------
-        # Buttons start and stop the processing, and disable/enable the settings. Only one button is visible at a time.
-        # The run and stop button events are defined in a later section, as other components need to be defined first.
+            # ------------------------------ BUTTONS ------------------------------
+            # Buttons start and stop the processing, and disable/enable the settings. Only one button is visible at a time.
+            # The run and stop button events are defined in a later section, as other components need to be defined first.
 
             with gr.Column(scale=10):
-                stop_button = gr.Button("Stop", elem_id="stop_button", variant="stop", visible=False)
-                run_button = gr.Button("Run", elem_id="run_button", variant="primary", visible=True)
+                stop_button = gr.Button(
+                    "Stop", elem_id="stop_button", variant="stop", visible=False
+                )
+                run_button = gr.Button(
+                    "Run", elem_id="run_button", variant="primary", visible=True
+                )
 
         # ------------------------------ SETTINGS ------------------------------
         # Settings control the behaviour of the program. They are grouped in an accordion that can be expanded/collapsed.
@@ -145,9 +165,11 @@ def build_interface() -> gr.Blocks:
 
         def update_cfg(attr: str):
             """Create a callback that writes *value* into ``cfg.attr``."""
+
             def _inner(value):
                 setattr(cfg, attr, value)
                 return None
+
             return _inner
 
         with gr.Row():
@@ -156,21 +178,32 @@ def build_interface() -> gr.Blocks:
                     with gr.Tab("System"):
                         with gr.Row():
                             with gr.Column(scale=1, min_width=300):
-
                                 # DETECTION SETTINGS
                                 gr.Markdown(value="Detection")
 
                                 # Model Type
                                 slider_model_type = gr.Dropdown(
-                                    choices=['PyTorch', 'NCNN'],
+                                    choices=["PyTorch", "NCNN"],
                                     label="Model Type",
-                                    value=("PyTorch" if cfg.MODEL_PATH.endswith(".pt") else "NCNN"),
+                                    value=(
+                                        "PyTorch"
+                                        if cfg.MODEL_PATH.endswith(".pt")
+                                        else "NCNN"
+                                    ),
                                     multiselect=False,
-                                    info="Select the backend for the YOLO model"
+                                    info="Select the backend for the YOLO model",
                                 )
+
                                 def on_model_type_change(model_type: str):
-                                    cfg.MODEL_PATH = "./models/car_plate.pt" if model_type == "PyTorch" else "./models/best_ncnn_model"
-                                slider_model_type.change(on_model_type_change, slider_model_type, None)
+                                    cfg.MODEL_PATH = (
+                                        "./models/car_plate.pt"
+                                        if model_type == "PyTorch"
+                                        else "./models/best_ncnn_model"
+                                    )
+
+                                slider_model_type.change(
+                                    on_model_type_change, slider_model_type, None
+                                )
 
                                 # Detection Threshold
                                 slider_detection_threshold = gr.Slider(
@@ -180,13 +213,17 @@ def build_interface() -> gr.Blocks:
                                     step=0.01,
                                     show_reset_button=True,
                                     label="Confidence threshold",
-                                    info="Minimum confidence required for object detection"
+                                    info="Minimum confidence required for object detection",
                                 )
-                                slider_detection_threshold.change(update_cfg("YOLO_THRESHOLD"), slider_detection_threshold, None)
+                                slider_detection_threshold.change(
+                                    update_cfg("YOLO_THRESHOLD"),
+                                    slider_detection_threshold,
+                                    None,
+                                )
 
                                 # OCR SETTINGS
                                 gr.Markdown(value="Optical Character Recognition (OCR)")
-                                
+
                                 # OCR Threshold
                                 slider_ocr_threshold = gr.Slider(
                                     minimum=0.0,
@@ -195,12 +232,15 @@ def build_interface() -> gr.Blocks:
                                     step=0.01,
                                     label="Confidence threshold",
                                     show_reset_button=True,
-                                    info="Minimum confidence required for OCR recognition"
+                                    info="Minimum confidence required for OCR recognition",
                                 )
-                                slider_ocr_threshold.change(update_cfg("OCR_CONFIDENCE_THRESHOLD"), slider_ocr_threshold, None)
+                                slider_ocr_threshold.change(
+                                    update_cfg("OCR_CONFIDENCE_THRESHOLD"),
+                                    slider_ocr_threshold,
+                                    None,
+                                )
 
                             with gr.Column(scale=1, min_width=300):
-
                                 # TRACKING SETTINGS
                                 gr.Markdown(value="Tracking")
 
@@ -209,9 +249,13 @@ def build_interface() -> gr.Blocks:
                                     label="Cosine Distance Threshold",
                                     value=cfg.COSINE_DISTANCE_THRESHOLD,
                                     maximum=1.0,
-                                    info="Threshold for object re-identification in tracking"
+                                    info="Threshold for object re-identification in tracking",
                                 )
-                                slider_tracking_cosine_distance_threshold.change(update_cfg("COSINE_DISTANCE_THRESHOLD"), slider_tracking_cosine_distance_threshold, None)
+                                slider_tracking_cosine_distance_threshold.change(
+                                    update_cfg("COSINE_DISTANCE_THRESHOLD"),
+                                    slider_tracking_cosine_distance_threshold,
+                                    None,
+                                )
 
                                 # Min. num. detections
                                 slider_tracking_min_num_detections = gr.Slider(
@@ -221,9 +265,13 @@ def build_interface() -> gr.Blocks:
                                     step=1.0,
                                     label="Min. num. detections",
                                     show_reset_button=True,
-                                    info="Detections required to confirm a new track"
+                                    info="Detections required to confirm a new track",
                                 )
-                                slider_tracking_min_num_detections.change(update_cfg("N_INIT"), slider_tracking_min_num_detections, None)
+                                slider_tracking_min_num_detections.change(
+                                    update_cfg("N_INIT"),
+                                    slider_tracking_min_num_detections,
+                                    None,
+                                )
 
                                 # Max. frames
                                 slider_tracking_max_frames = gr.Slider(
@@ -232,34 +280,41 @@ def build_interface() -> gr.Blocks:
                                     value=cfg.MAX_AGE,
                                     step=1.0,
                                     label="Max. frames",
-                                    info="Frames to keep a track without new detections"
+                                    info="Frames to keep a track without new detections",
                                 )
-                                slider_tracking_max_frames.change(update_cfg("MAX_AGE"), slider_tracking_max_frames, None)
+                                slider_tracking_max_frames.change(
+                                    update_cfg("MAX_AGE"),
+                                    slider_tracking_max_frames,
+                                    None,
+                                )
 
                     with gr.Tab("Visualization"):
-
                         # Show Track ID
                         checkbox_show_track_id = gr.Checkbox(
                             value=cfg.SHOW_TRACKER_ID,
                             label="Show Track ID",
-                            info="Display the tracker ID on detected license plates"
+                            info="Display the tracker ID on detected license plates",
                         )
-                        checkbox_show_track_id.change(update_cfg("SHOW_TRACKER_ID"), checkbox_show_track_id, None)
+                        checkbox_show_track_id.change(
+                            update_cfg("SHOW_TRACKER_ID"), checkbox_show_track_id, None
+                        )
 
                         # Show FPS
                         checkbox_show_fps = gr.Checkbox(
                             value=cfg.SHOW_FPS,
                             label="Show FPS",
-                            info="Show frames per second on the video"
+                            info="Show frames per second on the video",
                         )
-                        checkbox_show_fps.change(update_cfg("SHOW_FPS"), checkbox_show_fps, None)
+                        checkbox_show_fps.change(
+                            update_cfg("SHOW_FPS"), checkbox_show_fps, None
+                        )
 
                         # Show Trajectory
                         # The callback is defined in slider_trajectory_length (dependency)
                         checkbox_show_trajectory = gr.Checkbox(
                             value=cfg.SHOW_TRAJECTORY,
                             label="Show Trajectory",
-                            info="Draw the trajectory of tracked objects"
+                            info="Draw the trajectory of tracked objects",
                         )
 
                         # Trajectory Length
@@ -271,9 +326,14 @@ def build_interface() -> gr.Blocks:
                             label="Trajectory length",
                             info="Maximum length of the trajectory line for each object",
                             visible=cfg.SHOW_TRAJECTORY,
-                            interactive=cfg.SHOW_TRAJECTORY
+                            interactive=cfg.SHOW_TRAJECTORY,
                         )
-                        slider_trajectory_length.change(update_cfg("TRAJECTORY_LENGTH"), slider_trajectory_length, None)
+                        slider_trajectory_length.change(
+                            update_cfg("TRAJECTORY_LENGTH"),
+                            slider_trajectory_length,
+                            None,
+                        )
+
                         def toggle_trajectory_slider(show: bool):
                             """
                             If Show Trajectory is selected, then the trajectory length slider is enabled.
@@ -281,7 +341,12 @@ def build_interface() -> gr.Blocks:
                             """
                             cfg.SHOW_TRAJECTORY = show
                             return gr.update(visible=show, interactive=show)
-                        checkbox_show_trajectory.change(toggle_trajectory_slider, checkbox_show_trajectory, slider_trajectory_length)
+
+                        checkbox_show_trajectory.change(
+                            toggle_trajectory_slider,
+                            checkbox_show_trajectory,
+                            slider_trajectory_length,
+                        )
 
             # ------------------------------ DARK MODE ------------------------------
             # Dark Mode
@@ -302,7 +367,7 @@ def build_interface() -> gr.Blocks:
                         const bg = getComputedStyle(document.documentElement).getPropertyValue('--color-background-primary');
                         document.body.style.backgroundColor = bg;
                     }
-                    """
+                    """,
                 )
 
                 # Ensure dark mode is applied on initial interface load
@@ -316,15 +381,15 @@ def build_interface() -> gr.Blocks:
                         const bg = getComputedStyle(document.documentElement).getPropertyValue('--color-background-primary');
                         document.body.style.backgroundColor = bg;
                     }
-                    """
+                    """,
                 )
 
         # ------------------------------ EXAMPLES ------------------------------
         # Allow to select an example video to run the program.
-        examples = gr.Examples(
+        gr.Examples(
             examples=[["./data/test_video_1.mp4"], ["./data/test_video_2.mp4"]],
             inputs=input_video,
-            label="Example Videos"
+            label="Example Videos",
         )
 
         # ------------------------------ RUN/STOP EVENTS ------------------------------
@@ -376,11 +441,15 @@ def build_interface() -> gr.Blocks:
             run_button.click(log_run, None, None, queue=False)
             .then(_disable_settings, None, settings_components, queue=False)
             .then(lambda: gr.update(visible=True), None, output_image, queue=False)
-            .then(lambda: gr.update(interactive=False, visible=False), None, run_button, queue=False)
+            .then(
+                lambda: gr.update(interactive=False, visible=False),
+                None,
+                run_button,
+                queue=False,
+            )
             .then(lambda: gr.update(visible=True), None, stop_button, queue=False)
             .then(process_video, inputs=None, outputs=output_image, queue=True)
         )
-
 
         def stop_process():
             """Callback for the *Stop* button – requests the loop to terminate."""
@@ -393,10 +462,14 @@ def build_interface() -> gr.Blocks:
             .then(_enable_settings, None, settings_components, queue=False)
             .then(lambda: gr.update(visible=False), None, output_image, queue=False)
             .then(lambda: gr.update(value=None), None, input_video, queue=False)
-            .then(lambda: gr.update(interactive=True, visible=True), None, run_button, queue=False)
+            .then(
+                lambda: gr.update(interactive=True, visible=True),
+                None,
+                run_button,
+                queue=False,
+            )
             .then(lambda: gr.update(visible=False), None, stop_button, queue=False)
         )
-
 
         # ------------------------------ QUEUE ------------------------------
         # Enable queuing so that generator outputs are streamed properly.

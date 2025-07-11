@@ -7,4 +7,4 @@ using OCR (Optical Character Recognition) techniques.
 
 from .ocr import OCRReader
 
-__all__ = ['OCRReader']
+__all__ = ["OCRReader"]

@@ -7,4 +7,4 @@ using YOLO (You Only Look Once) object detection.
 
 from .yolo import YOLODetector
 
-__all__ = ['YOLODetector']
+__all__ = ["YOLODetector"]
