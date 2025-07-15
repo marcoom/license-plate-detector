@@ -4,7 +4,11 @@ These tests cover:
 1. Basic interface creation.
 2. Video-processing generator behaviour under normal and edge conditions.
 3. Execution of internal callbacks defined within ``build_interface``.
+4. Webcam availability detection.
 """
+
+# Standard library imports
+from unittest.mock import patch
 
 # Third-party imports
 import gradio as gr
@@ -12,7 +16,45 @@ import numpy as np
 import pytest
 
 # Local application imports
-from ui.gradio_ui import build_interface, process_video
+from ui.gradio_ui import build_interface, process_video, get_available_sources
+
+
+@patch('os.path.exists')
+def test_get_available_sources_webcam_available(mock_exists):
+    """Test get_available_sources when webcam is available.
+    
+    Verifies that:
+    - When /dev/video0 exists, both "Video File" and "Webcam" are returned
+    - The os.path.exists function is called with the correct path
+    """
+    # Setup mock to return True for webcam check
+    mock_exists.return_value = True
+    
+    # Call the function and check results
+    result = get_available_sources()
+    
+    # Verify the results
+    assert result == ["Video File", "Webcam"]
+    mock_exists.assert_called_once_with('/dev/video0')
+
+
+@patch('os.path.exists')
+def test_get_available_sources_webcam_not_available(mock_exists):
+    """Test get_available_sources when webcam is not available.
+    
+    Verifies that:
+    - When /dev/video0 doesn't exist, only "Video File" is returned
+    - The os.path.exists function is called with the correct path
+    """
+    # Setup mock to return False for webcam check
+    mock_exists.return_value = False
+    
+    # Call the function and check results
+    result = get_available_sources()
+    
+    # Verify the results
+    assert result == ["Video File"]
+    mock_exists.assert_called_once_with('/dev/video0')
 
 
 def test_build_interface_returns_blocks() -> None:
