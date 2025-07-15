@@ -143,7 +143,7 @@ def main() -> None:
     logger.info("Starting Gradio interface.")
 
     iface = build_interface()
-    iface.launch(share=False, server_port=7860)
+    iface.launch(server_name="0.0.0.0", server_port=7860, share=False)
 
 
 if __name__ == "__main__":

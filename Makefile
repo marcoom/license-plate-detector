@@ -106,15 +106,25 @@ docs-clean:
 	rm -rf "$(DOCSBUILDDIR)"
 
 # ------------------------------------------------------------
-# DEPLOYMENT (commented until implemented)
+# DEPLOYMENT
 # ------------------------------------------------------------
-# docker-build:
-# 	@echo "Building Docker image..."
-# 	docker build -t license-plate-detector .
-#
-# docker-run:
-# 	@echo "Running Docker container..."
-# 	docker run --rm -it -p 7860:7860 license-plate-detector
+docker-build: dist
+	@echo "Building Docker image..."
+	docker build -t license-plate-detector .
+
+docker-run:
+	@echo "Running Docker container..."
+	@if [ -e /dev/video0 ]; then \
+		echo "Webcam detected, adding device..."; \
+		docker run -it --rm --device /dev/video0:/dev/video0 -p 7860:7860 license-plate-detector; \
+	else \
+		echo "No webcam detected, running without webcam device..."; \
+		docker run -it --rm -p 7860:7860 license-plate-detector; \
+	fi
+
+docker-remove:
+	@echo "Removing Docker image..."
+	docker image rm -f license-plate-detector
 
 # ------------------------------------------------------------
 # HELP
@@ -138,6 +148,11 @@ help:  ## Show this help message
 	@echo "Build & Distribution:"
 	@echo "  dist           Build source and wheel distributions"
 	@echo "  clean          Remove build artifacts and cache files"
+	@echo
+	@echo "Deployment:"
+	@echo "  docker-build   Build Docker image"
+	@echo "  docker-remove  Remove Docker image"
+	@echo "  docker-run     Run Docker container"
 	@echo
 	@echo "For more information about a command, run 'make help'"
 

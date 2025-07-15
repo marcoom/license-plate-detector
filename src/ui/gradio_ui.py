@@ -37,6 +37,18 @@ stop_event = (
 )  # Global event to signal the processing loop to stop gracefully when the Stop Button is pressed
 
 
+def get_available_sources() -> list[str]:
+    """Get available input sources based on system configuration.
+    
+    Returns:
+        List of available input source options. Always includes 'Video File',
+        and includes 'Webcam' if a webcam is detected.
+    """
+    import os
+    webcam_available = os.path.exists('/dev/video0')
+    return ["Video File", "Webcam"] if webcam_available else ["Video File"]
+
+
 def _prepare_app() -> "LicensePlateDetectorApp":
     """Create an app instance based on the current `cfg` settings."""
     from app import LicensePlateDetectorApp  # Local import to break circularity
@@ -106,9 +118,10 @@ def build_interface() -> gr.Blocks:
 
             with gr.Column(scale=10):
                 input_source = gr.Radio(
-                    choices=["Video File", "Webcam"],
+                    choices=get_available_sources(),
                     label="Input Source",
                     value="Video File",
+                    info="If available, webcam can be selected",
                 )
 
             # ------------------------------ FILE SELECTOR ------------------------------

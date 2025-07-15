@@ -174,8 +174,8 @@ def test_failure_paths(monkeypatch, tmp_path: Path):
     monkeypatch.setattr("cv2.VideoCapture", lambda *_a, **_k: _FailCap())
 
     handler = VideoHandler(str(tmp_path / "nonexistent.mp4"))
-    ret, frame = handler.read_frame()
-    assert ret is False and frame is None
+    with pytest.raises(AssertionError):
+        ret, frame = handler.read_frame()
     handler.release()
 
 

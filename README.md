@@ -132,6 +132,39 @@ The detection model used is based on YOLOv8 and is trained on a custom dataset o
 
 ---
 
+## Docker
+
+This project includes Docker support for easy deployment. The following commands are available:
+
+### Build the Docker Image
+
+```bash
+make docker-build
+```
+
+This will build a Docker image named `license-plate-detector`.
+
+### Run the Docker Container
+
+```bash
+make docker-run
+```
+
+This will run the application in a Docker container with:
+- Webcam access (`/dev/video0`)
+- Port 7860 exposed for the Gradio web interface
+- Automatic cleanup when the container stops (`--rm` flag)
+
+### Remove the Docker Image
+
+```bash
+make docker-remove
+```
+
+This will remove the `license-plate-detector` Docker image.
+
+---
+
 ## Developer Tools
 
 ### Documentation
