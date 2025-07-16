@@ -21,36 +21,44 @@ This project is a system for detecting vehicle license plates from video or real
 
 ```
 license-plate-detector/
-├── src/
+├── src/                     # Source code package
 │   ├── __init__.py         # Package definition
-│   ├── app.py              # Main entry point
-│   ├── config.py           # Configuration variables
-│   ├── detection/          # YOLO detector logic
+│   ├── app.py              # Main application entry point
+│   ├── config.py           # Configuration settings
+│   ├── detection/          # Object detection components
 │   │   ├── __init__.py
-│   │   └── yolo.py
-│   ├── ocr/                # OCR utilities
+│   │   └── yolo.py         # YOLO detector implementation
+│   ├── ocr/                # Optical Character Recognition
 │   │   ├── __init__.py
-│   │   └── ocr.py
-│   ├── tracking/           # DeepSORT tracker
+│   │   └── ocr.py          # OCR processing logic
+│   ├── tracking/           # Object tracking
 │   │   ├── __init__.py
-│   │   └── tracker.py
+│   │   └── tracker.py      # DeepSORT tracker implementation
 │   ├── ui/                 # User interface components
 │   │   ├── __init__.py
-│   │   ├── gradio_ui.py    # Gradio web interface
-│   │   ├── drawing.py      # Drawing overlays
-│   │   └── interface.py    # Video overlay helpers
-│   ├── video/              # Video capture and saving
+│   │   ├── gradio_ui.py    # Web-based UI using Gradio
+│   │   ├── drawing.py      # Visualization and drawing utilities
+│   │   └── interface.py    # Interface helpers
+│   ├── video/              # Video processing
 │   │   ├── __init__.py
-│   │   └── video_handler.py
+│   │   └── video_handler.py # Video capture and processing
 │   └── utils/              # Utility functions
 │       ├── __init__.py
-│       └── logger.py
-├── setup.py               # Package installation script
-├── Makefile               # Development task automation
-├── requirements.txt       # Runtime dependencies
-├── requirements-dev.txt   # Development dependencies
-├── media/                 # Media assets
-└── README.md              # This file
+│       └── logger.py       # Logging configuration
+├── data/                   # Sample video files for testing
+├── docs/                   # Documentation
+│   └── source/             # Source files for Sphinx documentation
+├── media/                  # Media assets (screenshots, diagrams)
+├── models/                 # Pre-trained model files
+├── tests/                  # Test files
+├── Dockerfile              # Container configuration
+├── LICENSE                 # License file
+├── Makefile                # Development tasks automation
+├── NOTICE                  # Copyright notices
+├── README.md               # This file
+├── requirements.txt        # Runtime dependencies
+├── requirements-dev.txt    # Development dependencies
+└── setup.py                # Package installation script
 ```
 
 ---
@@ -80,20 +88,28 @@ make install-dev
 
 Edit `src/config.py` to customize behavior:
 
-- `INPUT_VIDEO`: Path to video file to process (`'./data/test_video_2.mp4'` by default)
+**Video and Processing**
+- `INPUT_VIDEO`: Path to video file to process (`'./data/test_video_1.mp4'` by default)
 - `WEBCAM`: Use webcam (`True`) or video file (`False`)
-- `SAVE_TO_VIDEO`: Save processed video when using a file
-- `SHOW_TRACKER_ID`: Show tracker ID with plate
-- `SHOW_FPS`: Show FPS counter
-- `SHOW_TRAJECTORY`: Show tracked object trajectories
-- `TRAJECTORY_LENGTH`: Max length of trajectory line
-- `MODEL_PATH`: Path to YOLO model (`.pt` for PyTorch or NCNN format)
-- `YOLO_THRESHOLD`: Detection confidence threshold (default: `0.5`)
+- `SAVE_TO_VIDEO`: Save processed video when using a file (`False` by default)
+- `SHOW_TRACKER_ID`: Show tracker ID with plate (`True` by default)
+- `SHOW_FPS`: Show FPS counter in the top-left corner (`True` by default)
+- `SHOW_TRAJECTORY`: Show tracked object trajectories (`True` by default)
+- `TRAJECTORY_LENGTH`: Max length of trajectory line (`50` by default)
+
+**Model and Processing Parameters**
+- `MODEL_PATH`: Path to YOLO model (`'./models/best_ncnn_model'` by default, can be NCNN or PyTorch `.pt` format)
+- `YOLO_THRESHOLD`: Object detection confidence threshold (default: `0.5`)
 - `OCR_CONFIDENCE_THRESHOLD`: Minimum confidence for OCR results (default: `0.02`)
-- `COSINE_DISTANCE_THRESHOLD`: Cosine distance threshold for re-identification (default: `0.4`)
-- `N_INIT`: Number of detections to confirm a track (default: `10`)
-- `MAX_AGE`: Max frames before a track is deleted (default: `60`)
-- `STOP_REQUESTED`: Set by UI to interrupt processing
+- `COSINE_DISTANCE_THRESHOLD`: Cosine distance threshold for object re-identification (default: `0.4`)
+- `N_INIT`: Number of detections needed to confirm an object (default: `10`)
+- `MAX_AGE`: Maximum number of frames an object can be absent before deleting the track (default: `60`)
+
+**Logging**
+- `LOG_LEVEL`: Logging level configuration (e.g., `'INFO'`, `'DEBUG'`, `'WARNING'`, default: `'INFO'`)
+
+**Runtime Control**
+- `STOP_REQUESTED`: Set by UI to interrupt processing (default: `False`)
 
 ---
 
@@ -107,13 +123,28 @@ make run
 - By default, the Gradio web UI will launch at http://localhost:7860
 - You can select video file or webcam, and adjust all settings in the UI
 
+> **Note:** You can also run the application using Docker. This is particularly useful for ensuring consistent behavior across different environments. See the [Docker](#docker) section for detailed instructions.
+
 ---
 
 ## User Interface
 
 The Gradio UI provides an easy way to upload/select video, switch between webcam and file, and adjust all detection/tracking parameters interactively.
 
-![User Interface](media/user_interface.png)
+![Demo video](media/demo.gif)
+
+---
+
+## Try it Online
+
+You can try a demo of this application on Hugging Face Spaces:
+
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/marcoom/license-plate-detector)
+
+> **Note:** 
+> - The online demo runs on CPU, so performance may be slower than running locally with GPU acceleration.
+> - The Hugging Face Space is hosted on an external platform and the link may become unavailable in the future.
+> - The online demo only supports video file uploads. When running locally, the app automatically checks for webcam availability and enables the webcam input option if one is detected.
 
 ---
 
@@ -162,6 +193,22 @@ make docker-remove
 ```
 
 This will remove the `license-plate-detector` Docker image.
+
+### Docker Hub
+
+The Docker image is available on Docker Hub at https://hub.docker.com/r/marcoom/license-plate-detector
+
+To pull the image, run:
+
+```bash
+docker pull marcoom/license-plate-detector:1.0.0
+```
+
+To run the container, run:
+
+```bash
+docker run -it --rm --device /dev/video0:/dev/video0 -p 7860:7860 marcoom/license-plate-detector:1.0.0
+```
 
 ---
 

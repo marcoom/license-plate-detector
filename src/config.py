@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
+# Logging
 LOG_LEVEL = "INFO"  # Logging level configuration (e.g., 'INFO', 'DEBUG', 'WARNING')
 
 # Video and processing
