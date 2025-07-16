@@ -17,7 +17,7 @@ dev_requires = load_requirements('requirements-dev.txt')
 
 setup(
     name="license_plate_detector",
-    version="0.1.0",
+    version="1.0.0",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=install_requires,
