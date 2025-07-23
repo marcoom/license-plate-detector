@@ -1,7 +1,7 @@
 name: Build & Attach Package
-on:
-  release:
-    types: [created]
+on: [push]
+  # release:
+  #   types: [created]
 
 jobs:
   build:
