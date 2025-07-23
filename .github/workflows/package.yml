@@ -1,4 +1,4 @@
-name: Build & Attach Package
+name: Build & Attach Package to Release
 
 on:
   release:
