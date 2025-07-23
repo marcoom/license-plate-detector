@@ -72,7 +72,7 @@ test:
 
 test-coverage:
 	@echo "Running tests with coverage..."
-	@PYTHONPATH=src $(VENV)/bin/pytest --cov=src --cov-report=term-missing
+	@PYTHONPATH=src $(VENV)/bin/pytest --cov=src --cov-report=term-missing --cov-report=html
 
 # ------------------------------------------------------------
 # DOCUMENTATION
@@ -106,7 +106,8 @@ dist: clean install-dev
 clean:
 	@echo "Removing Python caches & build artifacts..."
 	@$(FIND) . -type d -name "__pycache__" -exec rm -rf {} +
-	rm -rf build dist *.egg-info .pytest_cache || true
+	@rm -rf build dist *.egg-info .pytest_cache || true
+	@rm -rf htmlcov || true
 
 # ------------------------------------------------------------
 # DEPLOYMENT
