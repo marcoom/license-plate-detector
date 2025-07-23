@@ -1,0 +1,38 @@
+# .github/workflows/docker-smoke.yml
+name: Docker Smoke Test
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build the Docker image via Makefile
+      - name: Build image
+        run: make docker-build
+
+      # Launch the container in detached mode and wait a few seconds.
+      # If the process inside crashes, the job fails.
+      - name: Run container (smoke test)
+        run: |
+          docker run -d --name lpdetector_test -p 7860:7860 license-plate-detector
+          sleep 30                                  # give the app time to start
+          if [ "$(docker inspect -f '{{.State.Running}}' lpdetector_test)" != "true" ]; then
+            echo "Container exited prematurely, dumping logs:"
+            docker logs lpdetector_test || true
+            exit 1
+          fi
+
+      # Always stop & remove the container; optionally delete the image.
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop lpdetector_test || true
+          docker rm   lpdetector_test || true
+          docker image rm -f license-plate-detector || true
