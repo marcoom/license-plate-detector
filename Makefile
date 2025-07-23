@@ -18,7 +18,7 @@ PYTHON := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
 SRC := src
 SPHINXOPTS    ?=
-SPHINXBUILD   ?= sphinx-build
+SPHINXBUILD   ?= $(VENV)/bin/sphinx-build
 DOCSSOURCEDIR = docs/source
 DOCSBUILDDIR  = docs/build
 
