@@ -18,7 +18,7 @@ PYTHON := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
 SRC := src
 SPHINXOPTS    ?=
-SPHINXBUILD   ?= sphinx-build
+SPHINXBUILD   ?= $(VENV)/bin/sphinx-build
 DOCSSOURCEDIR = docs/source
 DOCSBUILDDIR  = docs/build
 
@@ -30,7 +30,7 @@ else
 endif
 
 # ------------------------------------------------------------
-# DEVELOPMENT ENVIRONMENT
+# ENVIRONMENT SETUP
 # ------------------------------------------------------------
 $(VENV):
 	python -m venv $(VENV)
@@ -43,10 +43,12 @@ install-dev: $(VENV)
 	$(PIP) install -r requirements.txt
 	$(PIP) install -r requirements-dev.txt
 
-clean:
-	@echo "Removing Python caches & build artifacts..."
-	@$(FIND) . -type d -name "__pycache__" -exec rm -rf {} +
-	rm -rf build dist *.egg-info .pytest_cache || true
+# ------------------------------------------------------------
+# RUN
+# ------------------------------------------------------------
+run:
+	@echo "Starting application..."
+	$(PYTHON) src/app.py
 
 # ------------------------------------------------------------
 # CODE QUALITY
@@ -70,18 +72,7 @@ test:
 
 test-coverage:
 	@echo "Running tests with coverage..."
-	@PYTHONPATH=src $(VENV)/bin/pytest --cov=src --cov-report=term-missing
-
-# ------------------------------------------------------------
-# BUILD & RUN
-# ------------------------------------------------------------
-run: install
-	@echo "Starting application..."
-	$(PYTHON) src/app.py
-
-dist: clean install-dev
-	@echo "Building source and wheel distribution..."
-	$(PYTHON) -m build --wheel --sdist
+	@PYTHONPATH=src $(VENV)/bin/pytest --cov=src --cov-report=term-missing --cov-report=html
 
 # ------------------------------------------------------------
 # DOCUMENTATION
@@ -104,6 +95,19 @@ docs-pdf:
 # Clean documentation build files
 docs-clean:
 	rm -rf "$(DOCSBUILDDIR)"
+
+# ------------------------------------------------------------
+# BUILD AND DISTRIBUTION
+# ------------------------------------------------------------
+dist: clean install-dev
+	@echo "Building source and wheel distribution..."
+	$(PYTHON) -m build --wheel --sdist
+
+clean:
+	@echo "Removing Python caches & build artifacts..."
+	@$(FIND) . -type d -name "__pycache__" -exec rm -rf {} +
+	@rm -rf build dist *.egg-info .pytest_cache || true
+	@rm -rf htmlcov || true
 
 # ------------------------------------------------------------
 # DEPLOYMENT
@@ -136,8 +140,17 @@ help:  ## Show this help message
 	@echo "  install        Install production dependencies"
 	@echo "  install-dev    Install development dependencies"
 	@echo
-	@echo "Development:"
+	@echo "Run:"
 	@echo "  run            Run the application"
+	@echo
+	@echo "Code Quality:"
+	@echo "  lint           Run code quality checks"
+	@echo "  format         Format code"
+	@echo "  type-check     Check type annotations"
+	@echo
+	@echo "Testing:"
+	@echo "  test           Run tests"
+	@echo "  test-coverage  Run tests with coverage"
 	@echo
 	@echo "Documentation:"
 	@echo "  docs           Build HTML and PDF documentation"
@@ -151,9 +164,9 @@ help:  ## Show this help message
 	@echo
 	@echo "Deployment:"
 	@echo "  docker-build   Build Docker image"
-	@echo "  docker-remove  Remove Docker image"
 	@echo "  docker-run     Run Docker container"
+	@echo "  docker-remove  Remove Docker image"
 	@echo
-	@echo "For more information about a command, run 'make help'"
+	@echo "To display this help message, run 'make help'"
 
 # End of Makefile

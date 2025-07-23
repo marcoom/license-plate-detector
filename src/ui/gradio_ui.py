@@ -39,13 +39,14 @@ stop_event = (
 
 def get_available_sources() -> list[str]:
     """Get available input sources based on system configuration.
-    
+
     Returns:
         List of available input source options. Always includes 'Video File',
         and includes 'Webcam' if a webcam is detected.
     """
     import os
-    webcam_available = os.path.exists('/dev/video0')
+
+    webcam_available = os.path.exists("/dev/video0")
     return ["Video File", "Webcam"] if webcam_available else ["Video File"]
 
 
@@ -450,7 +451,7 @@ def build_interface() -> gr.Blocks:
             return [gr.update(interactive=True) for _ in settings_components]
 
         # Actions to perform when *Run* button is clicked
-        run_click_event = (
+        _run_click_event = (
             run_button.click(log_run, None, None, queue=False)
             .then(_disable_settings, None, settings_components, queue=False)
             .then(lambda: gr.update(visible=True), None, output_image, queue=False)
@@ -470,7 +471,7 @@ def build_interface() -> gr.Blocks:
             stop_event.set()
 
         # Actions to perform when *Stop* button is clicked
-        stop_click_event = (
+        _stop_click_event = (
             stop_button.click(stop_process, None, None, queue=False)
             .then(_enable_settings, None, settings_components, queue=False)
             .then(lambda: gr.update(visible=False), None, output_image, queue=False)

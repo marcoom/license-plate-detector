@@ -65,7 +65,7 @@ class VideoInterface:
         output_video_path = f"{base_name}_processed{ext}"
         writer = cv2.VideoWriter(
             output_video_path,
-            cv2.VideoWriter_fourcc(*"mp4v"), # type: ignore[attr-defined]
+            cv2.VideoWriter_fourcc(*"mp4v"),  # type: ignore[attr-defined]
             fps,
             (frame_width, frame_height),
         )

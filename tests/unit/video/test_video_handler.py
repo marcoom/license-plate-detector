@@ -42,26 +42,46 @@ def test_video_handler_initialization() -> None:
     handler.release()
 
 
-def test_video_handler_read_frame_returns_frame() -> None:
+def test_video_handler_read_frame_returns_frame(monkeypatch) -> None:
     """Test that read_frame returns a valid frame.
 
     Verifies that:
     - The function returns a tuple of (success, frame)
     - The success flag is True when a frame is read
-    - The frame is a numpy array with the expected shape
+  
+    This test uses a mock video capture to simulate a video source.
     """
+    # Create a mock video capture class
+    class MockVideoCapture:
+        def __init__(self, *args, **kwargs):
+            self.is_opened_flag = True
+            
+        def isOpened(self) -> bool:
+            return self.is_opened_flag
+            
+        def read(self):
+            # Return a simple black frame
+            return True, np.zeros((480, 640, 3), dtype=np.uint8)
+            
+        def release(self):
+            self.is_opened_flag = False
+    
+    # Patch cv2.VideoCapture to use our mock
+    monkeypatch.setattr('cv2.VideoCapture', MockVideoCapture)
+    
     # Setup
-    handler = VideoHandler(0)  # Using 0 for default camera
-
+    handler = VideoHandler("test_source")  # Source can be anything since we're mocking
+    
     try:
         # Exercise
         ret, frame = handler.read_frame()
-
+        
         # Verify
         assert ret is True, "Frame should be read successfully"
+        assert frame is not None, "Frame should not be None"
         assert isinstance(frame, np.ndarray), "Frame should be a numpy array"
         assert len(frame.shape) == 3, "Frame should have 3 dimensions (H, W, C)"
-
+        
     finally:
         # Cleanup
         handler.release()

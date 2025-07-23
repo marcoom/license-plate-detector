@@ -54,7 +54,7 @@ class VideoHandler:
         self.writer = None
         self.output_path = output_path
         if output_path and frame_width and frame_height and fps:
-            fourcc = cv2.VideoWriter_fourcc(*"mp4v") # type: ignore[attr-defined]
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[attr-defined]
             self.writer = cv2.VideoWriter(
                 output_path, fourcc, fps, (frame_width, frame_height)
             )

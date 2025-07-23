@@ -225,6 +225,7 @@ The documentation is generated inside the /docs/build directory.
 
 More Make commands are available to generate only html (make docs-html), pdf (make docs-pdf) or remove documentation building files (make docs-clean).
 
+Click [here](https://marcoom.github.io/license-plate-detector/) to read the full user & API guide.
 
 ### Building Distributions
 To build source and wheel distributions for the package:
