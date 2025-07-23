@@ -39,13 +39,14 @@ stop_event = (
 
 def get_available_sources() -> list[str]:
     """Get available input sources based on system configuration.
-    
+
     Returns:
         List of available input source options. Always includes 'Video File',
         and includes 'Webcam' if a webcam is detected.
     """
     import os
-    webcam_available = os.path.exists('/dev/video0')
+
+    webcam_available = os.path.exists("/dev/video0")
     return ["Video File", "Webcam"] if webcam_available else ["Video File"]
 
 
