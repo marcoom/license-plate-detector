@@ -1,10 +1,10 @@
 name: Build Docs
-on:
-  push:
-    branches: [master]
-    paths:
-      - "docs/**"
-      - "src/**"
+on: [push]
+# push:
+#   branches: [master]
+#   paths:
+#     - "docs/**"
+#     - "src/**"
 
 jobs:
   docs:
