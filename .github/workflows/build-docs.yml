@@ -10,7 +10,10 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
+      pages: write
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,16 +26,17 @@ jobs:
       - name: Build HTML docs
         run: make docs-html
 
-      - name: Upload docs site
+      - name: Upload docs artifact
         uses: actions/upload-artifact@v4
         with:
           name: sphinx-site
           path: docs/build/html
           retention-days: 7
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/build/html
-          force_orphan: true
+          path: docs/build/html
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v2
